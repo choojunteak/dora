@@ -1,8 +1,7 @@
-import { foodPlaces } from "@/data/mockData";
 import type { MergedPlace, RecommendationResult } from "@/types";
 import { distanceMeters } from "@/utils/distance";
-import { getVisiblePlaces } from "@/utils/places";
 import { knownLocations, searchKnownLocations, searchOneMap } from "@/utils/location";
+import { getPlacesForSelectedLists } from "@/lib/data/places";
 
 const tagKeywords: Record<string, string[]> = {
   Dessert: ["dessert", "sweet", "ice cream", "waffle", "pancake", "matcha"],
@@ -93,7 +92,7 @@ export async function recommendPlaces(query: string, selectedListIds: string[]) 
     }
   }
 
-  const visiblePlaces = getVisiblePlaces(foodPlaces, selectedListIds);
+  const visiblePlaces = getPlacesForSelectedLists(selectedListIds);
   const strictResults = visiblePlaces
     .map((place) => scorePlace(place, interpretedTags, reference, radiusMeters))
     .filter((place): place is RecommendationResult => Boolean(place))

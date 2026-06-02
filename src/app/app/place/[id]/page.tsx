@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { foodPlaces } from "@/data/mockData";
 import { PlaceCard } from "@/components/PlaceCard";
 import { appleMapsLink, googleMapsLink } from "@/utils/places";
+import { getPlaceById } from "@/lib/data/places";
 
 export default async function PlacePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const place = foodPlaces.find((item) => item.id === id);
+  const place = getPlaceById(id);
   if (!place) notFound();
 
   const mergedPlace = { ...place, selectedListIds: place.listIds, savedBySelected: place.savedBy };

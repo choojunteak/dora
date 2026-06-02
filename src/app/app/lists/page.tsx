@@ -1,7 +1,9 @@
 import Link from "next/link";
-import { foodLists, foodPlaces } from "@/data/mockData";
+import { getFoodListsWithCounts } from "@/lib/data/lists";
 
 export default function ListsPage() {
+  const foodLists = getFoodListsWithCounts();
+
   return (
     <main className="mx-auto max-w-5xl px-4 pb-24 pt-6">
       <div className="mb-5 flex items-end justify-between gap-4">
@@ -16,7 +18,6 @@ export default function ListsPage() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         {foodLists.map((list) => {
-          const count = foodPlaces.filter((place) => place.listIds.includes(list.id)).length;
           return (
             <Link
               key={list.id}
@@ -33,7 +34,7 @@ export default function ListsPage() {
                 <div>
                   <h2 className="text-lg font-black text-ink">{list.name}</h2>
                   <p className="mt-1 text-sm text-stone-500">
-                    {list.ownerName} saves - {count} places
+                    {list.ownerName} saves - {list.placeCount} places
                   </p>
                   <p className="mt-3 text-sm leading-6 text-stone-600">{list.description}</p>
                 </div>

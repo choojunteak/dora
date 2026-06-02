@@ -75,9 +75,13 @@ create table if not exists place_sources (
 );
 
 create index if not exists idx_places_lat_lng on places(latitude, longitude);
+create index if not exists idx_food_lists_owner_id on food_lists(owner_id);
 create index if not exists idx_saved_places_list_id on saved_places(list_id);
 create index if not exists idx_saved_places_place_id on saved_places(place_id);
 create index if not exists idx_place_tags_place_id on place_tags(place_id);
+create index if not exists idx_place_tags_place_id_tag on place_tags(place_id, tag);
+create index if not exists idx_comments_place_id on comments(place_id);
+create index if not exists idx_place_sources_place_id on place_sources(place_id);
 
 -- Suggested RLS direction for later:
 -- alter table profiles enable row level security;
@@ -95,3 +99,4 @@ create index if not exists idx_place_tags_place_id on place_tags(place_id);
 -- 3. Users can insert/update/delete their own lists and saved_places rows.
 -- 4. Places can be read by authenticated users and inserted by authenticated users.
 -- 5. Comments can be managed by their author.
+-- 6. Service-role-only maintenance should stay server-side and never use the anon key.

@@ -1,20 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { foodLists, foodPlaces } from "@/data/mockData";
 import { PlaceCard } from "@/components/PlaceCard";
+import { getListById } from "@/lib/data/lists";
+import { getPlacesByListId } from "@/lib/data/places";
 
 export default async function ListDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const list = foodLists.find((item) => item.id === id);
+  const list = getListById(id);
   if (!list) notFound();
 
-  const places = foodPlaces
-    .filter((place) => place.listIds.includes(list.id))
-    .map((place) => ({
-      ...place,
-      selectedListIds: [list.id],
-      savedBySelected: [list.ownerName]
-    }));
+  const places = getPlacesByListId(list.id);
 
   return (
     <main className="mx-auto max-w-4xl px-4 pb-24 pt-6">

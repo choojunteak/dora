@@ -6,6 +6,8 @@ This pass refactored the Dora map UI from a dashboard-style overlay into a mobil
 
 Latest focused update: `/app/map` now has a compact floating Home / Map / Lists navigation pill so users can leave the full-screen map without restoring the larger bottom navigation.
 
+Supabase foundation update: the project now includes Supabase client factories, database types, and a mock-backed data access layer. The current UI still runs on mock data until credentials and real query implementations are added.
+
 ## Files Edited
 
 - `src/components/AppShell.tsx`
@@ -21,6 +23,17 @@ Latest focused update: `/app/map` now has a compact floating Home / Map / Lists 
 - `src/app/app/lists/[id]/page.tsx`
 - `README.md`
 - `IMPLEMENTATION_NOTES.md`
+- `package.json`
+- `package-lock.json`
+- `src/lib/supabase/client.ts`
+- `src/lib/supabase/server.ts`
+- `src/lib/supabase/types.ts`
+- `src/lib/data/lists.ts`
+- `src/lib/data/places.ts`
+- `src/lib/data/savedPlaces.ts`
+- `src/lib/data/comments.ts`
+- `src/lib/data/placeSources.ts`
+- `supabase/schema.sql`
 
 ## Map Layout
 
@@ -80,6 +93,28 @@ Selecting a recommendation closes the chat drawer and focuses the place on the m
 
 The map page accepts `?lists=<listId>` and starts with only that list selected.
 
+## Supabase Foundation
+
+`@supabase/supabase-js` is installed. The Supabase helpers are intentionally safe during MVP development:
+
+- `createBrowserSupabaseClient()` returns a typed Supabase client when `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` exist.
+- `createServerSupabaseClient()` returns a typed service-role client when `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` exist.
+- If env values are missing, both helpers return `null`.
+
+The data access layer in `src/lib/data/` currently returns mock data and includes comments marking where Supabase queries should replace the fallback. Page-level reads now use these helpers where practical:
+
+- `getFoodLists()`
+- `getFoodListsWithCounts()`
+- `getListById(listId)`
+- `getAllFoodPlaces()`
+- `getPlaceById(placeId)`
+- `getPlacesForSelectedLists(listIds)`
+- `getPlacesByListId(listId)`
+- `createSavedPlace(input)`
+- `getCommentsByPlaceId(placeId)`
+
+This keeps the app working without Supabase credentials while giving the next pass a clear integration boundary.
+
 ## Manual Test Steps
 
 1. Start the app with `npm.cmd run dev`.
@@ -95,6 +130,8 @@ The map page accepts `?lists=<listId>` and starts with only that list selected.
 11. Open `http://localhost:3000/app/lists`.
 12. Click a list card, then click `View this list on map`.
 13. Confirm `/app/map?lists=<listId>` loads with only that list selected.
+14. Confirm the app still runs without `.env.local`.
+15. Optional: add Supabase values to `.env.local` and confirm the app still builds; live queries are not enabled yet.
 
 ## Known Limitations
 
@@ -103,11 +140,13 @@ The map page accepts `?lists=<listId>` and starts with only that list selected.
 - The map uses OpenStreetMap raster tiles for a no-key MVP.
 - The list filter is represented in the URL only on initial page load.
 - The compact map navigation is intentionally separate from the full app bottom nav, so nav styling is duplicated lightly for now.
+- Supabase clients are scaffolded, but the data layer still returns mock data.
 - No real authentication or Supabase persistence is connected yet.
 
 ## Recommended Next Fixes
 
 - Persist selected lists in the URL as the user toggles them.
 - Add a compact mobile place-results drawer after recommendation queries.
+- Replace mock data helper bodies with Supabase queries.
 - Add Supabase auth and saved-place persistence.
 - Add proper PWA icons and service worker.

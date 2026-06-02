@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { foodLists, foodPlaces as initialFoodPlaces } from "@/data/mockData";
 import type { FoodPlace, MergedPlace, OneMapResult, RecommendationResult } from "@/types";
 import { distanceMeters } from "@/utils/distance";
 import { getVisiblePlaces } from "@/utils/places";
@@ -14,13 +13,16 @@ import { PlaceBottomSheet } from "@/components/PlaceBottomSheet";
 import { PlaceCard } from "@/components/PlaceCard";
 import { SearchLocationBox } from "@/components/SearchLocationBox";
 import { SelectedListChips } from "@/components/SelectedListChips";
+import { getFoodLists } from "@/lib/data/lists";
+import { getAllFoodPlaces } from "@/lib/data/places";
 
 type Props = {
   initialSelectedListIds?: string[];
 };
 
 export function FoodMapApp({ initialSelectedListIds }: Props) {
-  const [places, setPlaces] = useState<FoodPlace[]>(initialFoodPlaces);
+  const foodLists = getFoodLists();
+  const [places, setPlaces] = useState<FoodPlace[]>(() => getAllFoodPlaces());
   const [selectedListIds, setSelectedListIds] = useState(() => {
     const validIds = new Set(foodLists.map((list) => list.id));
     const fromUrl = initialSelectedListIds?.filter((id) => validIds.has(id)) ?? [];

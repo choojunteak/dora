@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { foodLists, foodPlaces } from "@/data/mockData";
 import { PlaceCard } from "@/components/PlaceCard";
+import { getFoodLists } from "@/lib/data/lists";
+import { getFavouritePlaces } from "@/lib/data/places";
 
 export default function AppHomePage() {
-  const favourites = foodPlaces.filter((place) => place.status === "favourite").slice(0, 3);
+  const foodLists = getFoodLists();
+  const favourites = getFavouritePlaces(3);
 
   return (
     <main className="mx-auto max-w-5xl px-4 pb-24 pt-6">
@@ -49,7 +51,7 @@ export default function AppHomePage() {
         <h2 className="mb-3 text-xl font-black text-ink">Favourite saves</h2>
         <div className="grid gap-3 lg:grid-cols-3">
           {favourites.map((place) => (
-            <PlaceCard key={place.id} place={{ ...place, selectedListIds: place.listIds, savedBySelected: place.savedBy }} />
+            <PlaceCard key={place.id} place={place} />
           ))}
         </div>
       </section>

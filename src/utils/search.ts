@@ -1,7 +1,7 @@
-import { foodPlaces } from "@/data/mockData";
 import type { FoodPlace } from "@/types";
+import { getAllFoodPlaces } from "@/lib/data/places";
 
-export function searchPlaces(query: string, places: FoodPlace[] = foodPlaces) {
+export function searchPlaces(query: string, places: FoodPlace[] = getAllFoodPlaces()) {
   const normalized = query.trim().toLowerCase();
   if (!normalized) return places;
 

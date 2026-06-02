@@ -20,7 +20,7 @@ Dora is a Singapore-focused social food map MVP. The core idea is: show me food 
 - Tailwind CSS
 - MapLibre GL JS
 - OneMap Singapore search API route
-- Supabase-ready schema, currently using local mock data
+- Supabase JS client foundation with mock-data fallback
 
 ## Run Locally
 
@@ -75,6 +75,32 @@ OPENAI_API_KEY=
 
 The MVP does not require these values to run. OneMap search currently uses the public search endpoint and falls back to local known Singapore locations if the live call fails.
 
+## Supabase Setup
+
+The project includes a Supabase foundation, but the app still runs without Supabase credentials.
+
+1. Create a Supabase project.
+2. Run `supabase/schema.sql` in the Supabase SQL editor.
+3. Copy `.env.example` to `.env.local`.
+4. Fill in:
+
+```text
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+```
+
+Do not commit `.env.local`.
+
+Current Supabase files:
+
+- `src/lib/supabase/client.ts` - browser-safe client factory
+- `src/lib/supabase/server.ts` - service-role server client factory for future routes
+- `src/lib/supabase/types.ts` - typed database shape matching `schema.sql`
+- `src/lib/data/` - data access helpers that currently return mock data
+
+If Supabase env values are missing, the client helpers return `null` and the data layer keeps using mock data. This is intentional so the MVP remains demoable during development.
+
 ## Important Files
 
 - `src/app/app/map/page.tsx` - main map route
@@ -85,6 +111,8 @@ The MVP does not require these values to run. OneMap search currently uses the p
 - `src/components/ChatRecommendationPanel.tsx` - recommendation chat UI
 - `src/utils/recommendations.ts` - rule-based parsing and scoring
 - `src/data/mockData.ts` - mock lists and Singapore food places
+- `src/lib/data/` - mock-backed data access layer for future Supabase queries
+- `src/lib/supabase/` - Supabase client/server/type foundation
 - `src/app/app/lists/[id]/page.tsx` - list detail route
 - `src/app/api/onemap/search/route.ts` - server-side OneMap search route
 - `src/app/api/recommend/route.ts` - recommendation API route
@@ -93,6 +121,8 @@ The MVP does not require these values to run. OneMap search currently uses the p
 ## Current MVP Limitations
 
 - Authentication is mocked.
+- Supabase is scaffolded but not yet used for live persistence.
+- Food lists, places, comments, tags, and source links still read from local mock data.
 - Places saved through the add modal only live in browser state until refresh.
 - Recommendation logic is deterministic keyword matching, not an LLM yet.
 - Map tiles use OpenStreetMap raster tiles for a simple no-key MVP.
@@ -101,8 +131,9 @@ The MVP does not require these values to run. OneMap search currently uses the p
 
 ## Next Steps
 
+- Replace the mock-backed data helpers in `src/lib/data/` with Supabase queries.
 - Connect Supabase auth.
-- Persist list saves, comments, and sources.
+- Persist list saves, comments, tags, and sources.
 - Add friend invitations and list privacy.
 - Replace the rule-based recommender with an LLM-assisted parser while keeping the current scoring function.
 - Add PWA service worker and production icons.
