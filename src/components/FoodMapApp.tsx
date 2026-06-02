@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { foodLists, foodPlaces as initialFoodPlaces } from "@/data/mockData";
 import type { FoodPlace, MergedPlace, OneMapResult, RecommendationResult } from "@/types";
@@ -108,7 +109,7 @@ export function FoodMapApp({ initialSelectedListIds }: Props) {
         <div className="pointer-events-auto mx-auto max-w-2xl">
           <div className="flex items-start gap-2">
             <div className="min-w-0 flex-1">
-            <SearchLocationBox onSelect={setReferencePoint} />
+              <SearchLocationBox onSelect={setReferencePoint} />
             </div>
             <button
               type="button"
@@ -145,7 +146,7 @@ export function FoodMapApp({ initialSelectedListIds }: Props) {
         </div>
       </aside>
 
-      <div className="fixed bottom-5 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2">
+      <div className="fixed bottom-20 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2">
         <button
           type="button"
           onClick={() => setIsChatOpen(true)}
@@ -161,6 +162,26 @@ export function FoodMapApp({ initialSelectedListIds }: Props) {
           Add
         </button>
       </div>
+
+      <nav className="fixed bottom-3 left-1/2 z-30 -translate-x-1/2 rounded-full bg-white/95 p-1.5 shadow-soft ring-1 ring-stone-200 backdrop-blur">
+        <div className="grid grid-cols-3 gap-1">
+          {[
+            { href: "/app", label: "Home" },
+            { href: "/app/map", label: "Map", active: true },
+            { href: "/app/lists", label: "Lists" }
+          ].map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`rounded-full px-4 py-2.5 text-center text-xs font-black transition ${
+                item.active ? "bg-ink text-white" : "text-stone-600 hover:bg-stone-100"
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      </nav>
 
       {isChatOpen ? (
         <div className="fixed inset-0 z-[60] bg-black/20" onClick={() => setIsChatOpen(false)}>

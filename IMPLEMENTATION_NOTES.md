@@ -4,6 +4,8 @@
 
 This pass refactored the Dora map UI from a dashboard-style overlay into a mobile-first map experience. The map is now the primary full-screen surface, with compact floating controls and bottom drawers for secondary actions.
 
+Latest focused update: `/app/map` now has a compact floating Home / Map / Lists navigation pill so users can leave the full-screen map without restoring the larger bottom navigation.
+
 ## Files Edited
 
 - `src/components/AppShell.tsx`
@@ -18,6 +20,7 @@ This pass refactored the Dora map UI from a dashboard-style overlay into a mobil
 - `src/app/app/lists/page.tsx`
 - `src/app/app/lists/[id]/page.tsx`
 - `README.md`
+- `IMPLEMENTATION_NOTES.md`
 
 ## Map Layout
 
@@ -27,9 +30,20 @@ This pass refactored the Dora map UI from a dashboard-style overlay into a mobil
 - Compact list count button
 - Small selected-list chips
 - Bottom floating `Ask Dora` and `Add` buttons
+- Compact floating Home / Map / Lists navigation pill
 - Place details only when a pin is tapped
 
 The desktop side list still exists on extra-wide screens, but it is narrower, shorter, and hidden on mobile.
+
+## Map Navigation
+
+The normal app bottom nav remains hidden on `/app/map` to preserve the full-screen map feel. `FoodMapApp.tsx` now renders a smaller map-specific floating navigation pill at the bottom of the viewport:
+
+- `Home` links to `/app`
+- `Map` links to `/app/map` and is visually active
+- `Lists` links to `/app/lists`
+
+The `Ask Dora` and `Add` controls were moved upward so they do not overlap with this navigation. The `5 lists` button remains only for filtering visible map pins, not for navigating to the Lists page.
 
 ## List Drawer
 
@@ -76,9 +90,11 @@ The map page accepts `?lists=<listId>` and starts with only that list selected.
 6. Search for `Orchard MRT` and select a result.
 7. Tap `Ask Dora`, ask `dessert near Orchard MRT`, and select a result.
 8. Tap a map pin and confirm the place bottom sheet is scrollable.
-9. Open `http://localhost:3000/app/lists`.
-10. Click a list card, then click `View this list on map`.
-11. Confirm `/app/map?lists=<listId>` loads with only that list selected.
+9. Tap the bottom `Home`, `Map`, and `Lists` navigation pill links.
+10. Confirm `Map` is visually active while on `/app/map`.
+11. Open `http://localhost:3000/app/lists`.
+12. Click a list card, then click `View this list on map`.
+13. Confirm `/app/map?lists=<listId>` loads with only that list selected.
 
 ## Known Limitations
 
@@ -86,6 +102,7 @@ The map page accepts `?lists=<listId>` and starts with only that list selected.
 - Ask Dora is still rule-based and keyword-driven.
 - The map uses OpenStreetMap raster tiles for a no-key MVP.
 - The list filter is represented in the URL only on initial page load.
+- The compact map navigation is intentionally separate from the full app bottom nav, so nav styling is duplicated lightly for now.
 - No real authentication or Supabase persistence is connected yet.
 
 ## Recommended Next Fixes
