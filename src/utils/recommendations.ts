@@ -45,6 +45,41 @@ export function extractLocationPhrase(query: string) {
   return "Orchard MRT";
 }
 
+function normalizeQuery(query: string) {
+  return query.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function getPlaceNameMatches(query: string, places: MergedPlace[]) {
+  const normalized = normalizeQuery(query);
+  const queryTokens = new Set(normalized.split(" ").filter((token) => token.length >= 4));
+
+  return new Set(
+    places
+      .filter((place) => {
+        const placeName = normalizeQuery(place.name);
+        const placeTokens = placeName.split(" ").filter((token) => token.length >= 4);
+        return normalized.includes(placeName) || placeTokens.some((token) => queryTokens.has(token));
+      })
+      .map((place) => place.id)
+  );
+}
+
+function hasListOwnerMatch(query: string, places: MergedPlace[]) {
+  const normalized = normalizeQuery(query);
+  return places.some((place) =>
+    place.savedBySelected.some((owner) => normalized.includes(owner.toLowerCase()))
+  );
+}
+
+function hasMeaningfulRecommendationSignal(
+  query: string,
+  interpretedTags: string[],
+  places: MergedPlace[],
+  placeNameMatches: Set<string>
+) {
+  return interpretedTags.length > 0 || placeNameMatches.size > 0 || hasListOwnerMatch(query, places);
+}
+
 export function scorePlace(
   place: MergedPlace,
   tags: string[],
@@ -79,6 +114,18 @@ export function scorePlace(
 
 export async function recommendPlaces(query: string, selectedListIds: string[]) {
   const interpretedTags = extractTags(query);
+  const visiblePlaces = getPlacesForSelectedLists(selectedListIds);
+  const placeNameMatches = getPlaceNameMatches(query, visiblePlaces);
+
+  if (!hasMeaningfulRecommendationSignal(query, interpretedTags, visiblePlaces, placeNameMatches)) {
+    return {
+      interpretedLocation: "Locco",
+      interpretedTags,
+      radiusMeters: 1000,
+      results: []
+    };
+  }
+
   const interpretedLocation = extractLocationPhrase(query);
   const radiusMeters = 1000;
   const known = searchKnownLocations(interpretedLocation)[0];
@@ -92,9 +139,19 @@ export async function recommendPlaces(query: string, selectedListIds: string[]) 
     }
   }
 
-  const visiblePlaces = getPlacesForSelectedLists(selectedListIds);
   const strictResults = visiblePlaces
-    .map((place) => scorePlace(place, interpretedTags, reference, radiusMeters))
+    .map((place) => {
+      const scoredPlace = scorePlace(place, interpretedTags, reference, radiusMeters);
+      if (scoredPlace) return scoredPlace;
+      if (!placeNameMatches.has(place.id)) return null;
+
+      return {
+        ...place,
+        distanceMeters: Math.round(distanceMeters(reference, place)),
+        score: 90,
+        matchedTags: ["Place match"]
+      };
+    })
     .filter((place): place is RecommendationResult => Boolean(place))
     .filter((place) => place.distanceMeters <= radiusMeters);
 
@@ -102,7 +159,18 @@ export async function recommendPlaces(query: string, selectedListIds: string[]) 
     strictResults.length >= 3
       ? strictResults
       : visiblePlaces
-          .map((place) => scorePlace(place, interpretedTags, reference, 1800))
+          .map((place) => {
+            const scoredPlace = scorePlace(place, interpretedTags, reference, 1800);
+            if (scoredPlace) return scoredPlace;
+            if (!placeNameMatches.has(place.id)) return null;
+
+            return {
+              ...place,
+              distanceMeters: Math.round(distanceMeters(reference, place)),
+              score: 90,
+              matchedTags: ["Place match"]
+            };
+          })
           .filter((place): place is RecommendationResult => Boolean(place));
 
   const results = fallbackResults

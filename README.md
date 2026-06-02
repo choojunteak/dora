@@ -11,7 +11,7 @@ Locco is a Singapore-focused social food map MVP. The core idea is: show me food
 - Opens a mobile-friendly place bottom sheet when a pin is selected.
 - Supports mock add-place flow with local state.
 - Searches OneMap from a server route with local Singapore fallbacks.
-- Provides a rule-based recommendation chat for prompts like "dessert near Orchard MRT".
+- Provides Ask Locco, a rule-based recommendation assistant with compact map-focused result cards.
 
 ## Tech Stack
 

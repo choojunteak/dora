@@ -3,19 +3,53 @@
 import { useState } from "react";
 import type { MergedPlace, RecommendationResult } from "@/types";
 import { formatDistance } from "@/utils/distance";
+import { TagChip } from "@/components/TagChip";
+
+export type RecommendationPanelState = {
+  query: string;
+  summary: string | null;
+  results: RecommendationResult[];
+  hasAsked: boolean;
+};
 
 type Props = {
   selectedListIds: string[];
+  session: RecommendationPanelState;
+  onSessionChange: (session: RecommendationPanelState) => void;
   onResults: (results: RecommendationResult[]) => void;
   onSelectPlace: (place: MergedPlace) => void;
 };
 
-export function ChatRecommendationPanel({ selectedListIds, onResults, onSelectPlace }: Props) {
-  const [query, setQuery] = useState("I'm going to Orchard MRT and I feel like dessert");
+export function ChatRecommendationPanel({
+  selectedListIds,
+  session,
+  onSessionChange,
+  onResults,
+  onSelectPlace
+}: Props) {
   const [isLoading, setIsLoading] = useState(false);
-  const [summary, setSummary] = useState<string | null>(null);
-  const [results, setResults] = useState<RecommendationResult[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const { query, summary, results, hasAsked } = session;
+
+  function getRecommendationReason(result: RecommendationResult) {
+    const reasons: string[] = [];
+    if (result.matchedTags.length) {
+      reasons.push(`matches ${result.matchedTags.slice(0, 2).join(" and ")}`);
+    }
+    if (result.distanceMeters <= 600) {
+      reasons.push(`is ${formatDistance(result.distanceMeters)} away`);
+    }
+    if (result.savedBySelected.length > 1) {
+      reasons.push(`is trusted by ${result.savedBySelected.length} selected lists`);
+    }
+    if (result.status === "favourite") {
+      reasons.push("is marked as a favourite");
+    }
+
+    return reasons.length
+      ? `Locco picked this because it ${reasons.slice(0, 2).join(" and ")}.`
+      : "Locco picked this as one of the strongest nearby saves from your selected lists.";
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -23,6 +57,13 @@ export function ChatRecommendationPanel({ selectedListIds, onResults, onSelectPl
 
     setIsLoading(true);
     setError(null);
+    onSessionChange({
+      query,
+      summary: null,
+      results: [],
+      hasAsked: true
+    });
+    onResults([]);
     try {
       const response = await fetch("/api/recommend", {
         method: "POST",
@@ -36,17 +77,24 @@ export function ChatRecommendationPanel({ selectedListIds, onResults, onSelectPl
         error?: string;
       };
       if (!response.ok) throw new Error(payload.error ?? "Recommendation failed.");
-      const nextResults = payload.results ?? [];
-      setResults(nextResults);
+      const nextResults = (payload.results ?? []).slice(0, 5);
       onResults(nextResults);
-      setSummary(
-        `Looking near ${payload.interpretedLocation ?? "Singapore"}${
+      onSessionChange({
+        query,
+        results: nextResults,
+        hasAsked: true,
+        summary: `Looking near ${payload.interpretedLocation ?? "Singapore"}${
           payload.interpretedTags?.length ? ` for ${payload.interpretedTags.join(", ")}` : ""
         }.`
-      );
+      });
     } catch (recommendError) {
       setError(recommendError instanceof Error ? recommendError.message : "Recommendation failed.");
-      setResults([]);
+      onSessionChange({
+        query,
+        summary: null,
+        results: [],
+        hasAsked: true
+      });
       onResults([]);
     } finally {
       setIsLoading(false);
@@ -61,7 +109,12 @@ export function ChatRecommendationPanel({ selectedListIds, onResults, onSelectPl
       <form onSubmit={handleSubmit} className="flex gap-2">
         <input
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) =>
+            onSessionChange({
+              ...session,
+              query: event.target.value
+            })
+          }
           className="min-w-0 flex-1 rounded-full border border-stone-200 px-4 py-2 text-sm outline-none focus:border-tomato"
           placeholder="Cafe near Tanjong Pagar"
         />
@@ -83,21 +136,39 @@ export function ChatRecommendationPanel({ selectedListIds, onResults, onSelectPl
               key={result.id}
               type="button"
               onClick={() => onSelectPlace(result)}
-              className="rounded-lg bg-cream px-3 py-2 text-left hover:bg-orange-50"
+              className="rounded-lg border border-orange-100 bg-cream px-3 py-3 text-left shadow-sm transition hover:bg-orange-50"
             >
               <div className="flex items-start justify-between gap-2">
-                <div>
+                <div className="min-w-0 flex-1">
                   <p className="font-bold text-ink">{result.name}</p>
-                  <p className="text-xs text-stone-500">
-                    {formatDistance(result.distanceMeters)} - score {result.score}
+                  <p className="mt-1 text-xs font-semibold text-stone-500">
+                    {formatDistance(result.distanceMeters)} away - Saved by {result.savedBySelected.join(", ")}
                   </p>
                 </div>
                 <span className="rounded-full bg-white px-2 py-1 text-xs font-bold text-tomato">
                   {result.categories[0]}
                 </span>
               </div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {[...new Set([...result.matchedTags, ...result.categories, ...result.moodTags])]
+                  .slice(0, 4)
+                  .map((tag) => (
+                    <TagChip key={tag} label={tag} />
+                  ))}
+              </div>
+              <p className="mt-2 text-xs leading-5 text-stone-600">{getRecommendationReason(result)}</p>
             </button>
           ))}
+        </div>
+      ) : null}
+
+      {hasAsked && !isLoading && !error && !results.length ? (
+        <div className="mt-3 rounded-lg bg-cream p-4 text-sm text-stone-600">
+          <p className="font-black text-ink">No strong matches yet</p>
+          <p className="mt-1 leading-6">
+            Locco could not find a confident match. Try something like dessert near Orchard MRT or
+            cafe from Isabella&apos;s list.
+          </p>
         </div>
       ) : null}
     </section>

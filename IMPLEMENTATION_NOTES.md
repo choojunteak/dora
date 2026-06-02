@@ -10,6 +10,12 @@ Supabase foundation update: the project now includes Supabase client factories, 
 
 URL persistence update: selected food lists on `/app/map` now sync live into the `lists` query parameter, so a filtered map view can be shared or recovered.
 
+Ask Locco results update: recommendation results now appear as compact map-oriented cards with distance, tags, saved-by context, and a short reason explaining why Locco suggested each place.
+
+Recommendation focus update: recommended and selected places now render in separate non-clustered map overlay layers, so Ask Locco results remain visible even when nearby normal pins are clustered. Selecting a recommendation also uses stronger zoom and camera padding so the selected pin stays above the compact place sheet.
+
+Ask Locco flow update: after selecting a recommendation, the place sheet now includes a compact `Back to recommendations` action that reopens the previous Ask Locco results without rerunning the prompt. The rule-based recommender also has a lightweight confidence guard so meaningless prompts do not return unrelated Orchard-default results.
+
 ## Files Edited
 
 - `src/components/AppShell.tsx`
@@ -88,9 +94,41 @@ The chatbot is collapsed by default. The map shows only an `Ask Locco` bottom pi
 
 - Example prompt
 - Query input
-- Recommendation results
+- Compact recommendation cards with place name, distance, tags, saved-by context, and a short reason
+- Helpful no-result state
 
-Selecting a recommendation closes the chat drawer and focuses the place on the map.
+Submitting a new query clears previous highlighted pins before the next result set appears. Selecting a recommendation closes the chat drawer, focuses the place on the map, and opens the place bottom sheet.
+
+## Recommended Pin Focus
+
+`MapView.tsx` now keeps the normal saved-place source clustered, but renders Ask Locco recommendation results as a separate non-clustered overlay:
+
+- Recommended pins use cream fill, tomato outline, glow, and a ranking number.
+- The selected place gets a larger tomato pin, white ring, glow, and label above the clustered layer.
+- Recommended and selected places are filtered out of the normal unclustered pin layer to avoid duplicate-looking pins.
+- Clusters can still represent nearby normal places, but recommended and selected pins remain individually visible above them.
+
+When a place is selected, the map eases to it with a minimum zoom of `15.4` and bottom camera padding. This positions the selected pin in the visible map area above the place bottom sheet instead of directly behind it.
+
+`PlaceBottomSheet.tsx` was shortened to a lighter preview sheet with a lower mobile max-height. The action buttons were moved higher in the sheet so Google Maps, Apple Maps, Save, and Details stay easier to reach.
+
+## Returning To Recommendations
+
+`FoodMapApp.tsx` now stores the last Ask Locco query, summary, and result cards while the user remains on `/app/map`. Selecting a recommendation closes the Ask Locco sheet but keeps that session state and keeps the recommended pin highlights active. The compact place sheet receives an optional `Back to recommendations` action when previous results exist.
+
+Tapping `Back to recommendations` reopens the Ask Locco bottom sheet with the same query and result cards. The user does not need to retype the prompt.
+
+Closing Ask Locco directly with the backdrop or close button intentionally clears the previous results and removes old highlights.
+
+## Low-Confidence Queries
+
+The recommendation utility now checks whether the prompt contains at least one meaningful signal before using the default location fallback:
+
+- Food/category/mood tag match
+- Saved-by/list-owner match, such as `Isabella`
+- Mock place-name match
+
+If none are found, the API returns no results and the UI shows a helpful no-confidence state instead of unrelated default recommendations.
 
 ## List Detail Routes
 
@@ -139,20 +177,31 @@ This keeps the app working without Supabase credentials while giving the next pa
 8. Try `/app/map?lists=not_real,list_annj` and confirm only the valid list is selected.
 9. Search for `Orchard MRT` and select a result.
 10. Tap `Ask Locco`, ask `dessert near Orchard MRT`, and select a result.
-11. Tap a map pin and confirm the place bottom sheet is scrollable.
-12. Tap the bottom `Home`, `Map`, and `Lists` navigation pill links.
-13. Confirm `Map` is visually active while on `/app/map`.
-14. Open `http://localhost:3000/app/lists`.
-15. Click a list card, then click `View this list on map`.
-16. Confirm `/app/map?lists=<listId>` loads with only that list selected.
-17. Confirm the app still runs without `.env.local`.
-18. Optional: add Supabase values to `.env.local` and confirm the app still builds; live queries are not enabled yet.
+11. Confirm each recommendation card shows distance, tags, saved-by context, and a short reason.
+12. Tap a recommendation and confirm Ask Locco closes, the map focuses the place, and the place bottom sheet opens.
+13. Tap `Back to recommendations` in the place sheet and confirm the previous query/results return without retyping.
+14. Confirm the selected pin is visible above the compact place sheet instead of hidden behind it.
+15. Confirm recommended pins have a distinct numbered style while the result sheet is open.
+16. Submit a different Ask Locco query and confirm highlighted pins update.
+17. Close Ask Locco and confirm old recommendation highlights are removed.
+18. Try `random nonsense place` and confirm Locco shows a helpful no-confidence state.
+19. Tap a normal map pin and confirm the place bottom sheet still opens.
+20. Tap the bottom `Home`, `Map`, and `Lists` navigation pill links.
+21. Confirm `Map` is visually active while on `/app/map`.
+22. Open `http://localhost:3000/app/lists`.
+23. Click a list card, then click `View this list on map`.
+24. Confirm `/app/map?lists=<listId>` loads with only that list selected.
+25. Confirm the app still runs without `.env.local`.
+26. Optional: add Supabase values to `.env.local` and confirm the app still builds; live queries are not enabled yet.
 
 ## Known Limitations
 
 - Add-place saves are still local state only.
 - Ask Locco is still rule-based and keyword-driven.
+- Recommendation reasons are generated from deterministic scoring signals, not an LLM explanation.
+- The low-confidence guard is keyword/place/list based and can still miss ambiguous natural language.
 - The map uses OpenStreetMap raster tiles for a no-key MVP.
+- Recommended pins are highlighted only while Ask Locco results are active; after selecting a result, the selected-place overlay remains.
 - The list filter now persists in the URL, but the URL is only updated while the user is on `/app/map`.
 - The compact map navigation is intentionally separate from the full app bottom nav, so nav styling is duplicated lightly for now.
 - Supabase clients are scaffolded, but the data layer still returns mock data.

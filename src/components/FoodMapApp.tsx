@@ -7,7 +7,10 @@ import type { FoodPlace, MergedPlace, OneMapResult, RecommendationResult } from 
 import { distanceMeters } from "@/utils/distance";
 import { getVisiblePlaces } from "@/utils/places";
 import { AddPlaceModal } from "@/components/AddPlaceModal";
-import { ChatRecommendationPanel } from "@/components/ChatRecommendationPanel";
+import {
+  ChatRecommendationPanel,
+  type RecommendationPanelState
+} from "@/components/ChatRecommendationPanel";
 import { ListDrawer } from "@/components/ListDrawer";
 import { MapView } from "@/components/MapView";
 import { PlaceBottomSheet } from "@/components/PlaceBottomSheet";
@@ -37,6 +40,12 @@ export function FoodMapApp({ initialSelectedListIds }: Props) {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isListDrawerOpen, setIsListDrawerOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [recommendationSession, setRecommendationSession] = useState<RecommendationPanelState>({
+    query: "I'm going to Orchard MRT and I feel like dessert",
+    summary: null,
+    results: [],
+    hasAsked: false
+  });
 
   const visiblePlaces = useMemo(
     () => getVisiblePlaces(places, selectedListIds),
@@ -68,6 +77,22 @@ export function FoodMapApp({ initialSelectedListIds }: Props) {
 
   function handleRecommendationResults(results: RecommendationResult[]) {
     setHighlightedIds(results.map((result) => result.id));
+  }
+
+  function closeAskLocco() {
+    setIsChatOpen(false);
+    setHighlightedIds([]);
+    setRecommendationSession({
+      query: recommendationSession.query,
+      summary: null,
+      results: [],
+      hasAsked: false
+    });
+  }
+
+  function viewRecommendations() {
+    setIsChatOpen(true);
+    setHighlightedIds(recommendationSession.results.map((result) => result.id));
   }
 
   function handleAddPlace(place: FoodPlace) {
@@ -193,7 +218,7 @@ export function FoodMapApp({ initialSelectedListIds }: Props) {
       </nav>
 
       {isChatOpen ? (
-        <div className="fixed inset-0 z-[60] bg-black/20" onClick={() => setIsChatOpen(false)}>
+        <div className="fixed inset-0 z-[60] bg-black/20" onClick={closeAskLocco}>
           <section
             className="absolute inset-x-0 bottom-0 mx-auto max-h-[72dvh] max-w-xl overflow-y-auto rounded-t-lg bg-white p-4 shadow-soft sm:bottom-4 sm:rounded-lg"
             onClick={(event) => event.stopPropagation()}
@@ -205,7 +230,7 @@ export function FoodMapApp({ initialSelectedListIds }: Props) {
               </div>
               <button
                 type="button"
-                onClick={() => setIsChatOpen(false)}
+                onClick={closeAskLocco}
                 className="rounded-full bg-stone-100 px-3 py-2 text-sm font-black text-stone-600"
                 aria-label="Close Ask Locco"
               >
@@ -214,6 +239,8 @@ export function FoodMapApp({ initialSelectedListIds }: Props) {
             </div>
             <ChatRecommendationPanel
               selectedListIds={selectedListIds}
+              session={recommendationSession}
+              onSessionChange={setRecommendationSession}
               onResults={handleRecommendationResults}
               onSelectPlace={(place) => {
                 handleSelectPlace(place);
@@ -238,6 +265,7 @@ export function FoodMapApp({ initialSelectedListIds }: Props) {
         distanceMeters={selectedPlaceDistance}
         onClose={() => setSelectedPlace(null)}
         onSave={handleSaveSelectedPlace}
+        onViewRecommendations={recommendationSession.results.length ? viewRecommendations : undefined}
       />
 
       <AddPlaceModal

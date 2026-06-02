@@ -18,6 +18,7 @@ type PlaceFeatureProperties = {
   name: string;
   category: string;
   isHighlighted: boolean;
+  isSelected: boolean;
 };
 
 const singaporeStyle: maplibregl.StyleSpecification = {
@@ -39,7 +40,11 @@ const singaporeStyle: maplibregl.StyleSpecification = {
   ]
 };
 
-function toGeoJson(places: MergedPlace[], highlightedIds: string[]): FeatureCollection<Point, PlaceFeatureProperties> {
+function toGeoJson(
+  places: MergedPlace[],
+  highlightedIds: string[],
+  selectedPlaceId?: string
+): FeatureCollection<Point, PlaceFeatureProperties> {
   return {
     type: "FeatureCollection",
     features: places.map((place) => ({
@@ -52,7 +57,8 @@ function toGeoJson(places: MergedPlace[], highlightedIds: string[]): FeatureColl
         placeId: place.id,
         name: place.name,
         category: place.categories[0],
-        isHighlighted: highlightedIds.includes(place.id)
+        isHighlighted: highlightedIds.includes(place.id),
+        isSelected: selectedPlaceId === place.id
       }
     }))
   };
@@ -63,10 +69,15 @@ export function MapView({ places, highlightedIds, selectedPlace, referencePoint,
   const mapRef = useRef<maplibregl.Map | null>(null);
   const placesRef = useRef(places);
   const onSelectRef = useRef(onSelectPlace);
-  const geoJsonRef = useRef<FeatureCollection<Point, PlaceFeatureProperties>>(toGeoJson(places, highlightedIds));
+  const geoJsonRef = useRef<FeatureCollection<Point, PlaceFeatureProperties>>(
+    toGeoJson(places, highlightedIds, selectedPlace?.id)
+  );
   const referenceMarkerRef = useRef<maplibregl.Marker | null>(null);
 
-  const geoJson = useMemo(() => toGeoJson(places, highlightedIds), [places, highlightedIds]);
+  const geoJson = useMemo(
+    () => toGeoJson(places, highlightedIds, selectedPlace?.id),
+    [places, highlightedIds, selectedPlace]
+  );
 
   useEffect(() => {
     geoJsonRef.current = geoJson;
@@ -130,36 +141,91 @@ export function MapView({ places, highlightedIds, selectedPlace, referencePoint,
       });
 
       map.addLayer({
+        id: "recommended-glow",
+        type: "circle",
+        source: "places",
+        filter: [
+          "all",
+          ["!", ["has", "point_count"]],
+          ["boolean", ["get", "isHighlighted"], false],
+          ["!", ["boolean", ["get", "isSelected"], false]]
+        ],
+        paint: {
+          "circle-color": "#f36b4f",
+          "circle-radius": 22,
+          "circle-opacity": 0.16,
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#ffffff",
+          "circle-stroke-opacity": 0.9
+        }
+      });
+
+      map.addLayer({
+        id: "selected-glow",
+        type: "circle",
+        source: "places",
+        filter: [
+          "all",
+          ["!", ["has", "point_count"]],
+          ["boolean", ["get", "isSelected"], false]
+        ],
+        paint: {
+          "circle-color": "#f36b4f",
+          "circle-radius": 30,
+          "circle-opacity": 0.22,
+          "circle-stroke-width": 3,
+          "circle-stroke-color": "#231f20",
+          "circle-stroke-opacity": 0.18
+        }
+      });
+
+      map.addLayer({
         id: "unclustered-point",
         type: "circle",
         source: "places",
         filter: ["!", ["has", "point_count"]],
         paint: {
           "circle-color": [
+            "match",
+            ["get", "category"],
+            "Cafe",
+            "#10b981",
+            "Dessert",
+            "#f59e0b",
+            "Japanese",
+            "#fb7185",
+            "Korean",
+            "#8b5cf6",
+            "Local",
+            "#f97316",
+            "Cheap Eats",
+            "#38bdf8",
+            "#231f20"
+          ],
+          "circle-radius": [
             "case",
+            ["boolean", ["get", "isSelected"], false],
+            14,
+            ["boolean", ["get", "isHighlighted"], false],
+            12,
+            10
+          ],
+          "circle-stroke-width": [
+            "case",
+            ["boolean", ["get", "isSelected"], false],
+            5,
+            ["boolean", ["get", "isHighlighted"], false],
+            4,
+            3
+          ],
+          "circle-stroke-color": [
+            "case",
+            ["boolean", ["get", "isSelected"], false],
+            "#231f20",
             ["boolean", ["get", "isHighlighted"], false],
             "#f36b4f",
-            [
-              "match",
-              ["get", "category"],
-              "Cafe",
-              "#10b981",
-              "Dessert",
-              "#f59e0b",
-              "Japanese",
-              "#fb7185",
-              "Korean",
-              "#8b5cf6",
-              "Local",
-              "#f97316",
-              "Cheap Eats",
-              "#38bdf8",
-              "#231f20"
-            ]
-          ],
-          "circle-radius": ["case", ["boolean", ["get", "isHighlighted"], false], 14, 10],
-          "circle-stroke-width": 3,
-          "circle-stroke-color": "#ffffff"
+            "#ffffff"
+          ]
         }
       });
 
@@ -171,14 +237,14 @@ export function MapView({ places, highlightedIds, selectedPlace, referencePoint,
         minzoom: 13.2,
         layout: {
           "text-field": ["get", "name"],
-          "text-size": 12,
-          "text-offset": [0, 1.5],
+          "text-size": ["case", ["boolean", ["get", "isSelected"], false], 13, 12],
+          "text-offset": ["case", ["boolean", ["get", "isSelected"], false], ["literal", [0, 1.85]], ["literal", [0, 1.55]]],
           "text-anchor": "top"
         },
         paint: {
           "text-color": "#231f20",
           "text-halo-color": "#ffffff",
-          "text-halo-width": 1.2
+          "text-halo-width": ["case", ["boolean", ["get", "isSelected"], false], 1.6, 1.2]
         }
       });
     });
@@ -199,6 +265,13 @@ export function MapView({ places, highlightedIds, selectedPlace, referencePoint,
       if (place) onSelectRef.current(place);
     });
 
+    map.on("click", "place-labels", (event) => {
+      const feature = event.features?.[0];
+      const placeId = feature?.properties?.placeId as string | undefined;
+      const place = placesRef.current.find((item) => item.id === placeId);
+      if (place) onSelectRef.current(place);
+    });
+
     map.on("mouseenter", "clusters", () => {
       map.getCanvas().style.cursor = "pointer";
     });
@@ -209,6 +282,12 @@ export function MapView({ places, highlightedIds, selectedPlace, referencePoint,
       map.getCanvas().style.cursor = "pointer";
     });
     map.on("mouseleave", "unclustered-point", () => {
+      map.getCanvas().style.cursor = "";
+    });
+    map.on("mouseenter", "place-labels", () => {
+      map.getCanvas().style.cursor = "pointer";
+    });
+    map.on("mouseleave", "place-labels", () => {
       map.getCanvas().style.cursor = "";
     });
 
@@ -230,8 +309,14 @@ export function MapView({ places, highlightedIds, selectedPlace, referencePoint,
     if (!mapRef.current || !selectedPlace) return;
     mapRef.current.easeTo({
       center: [selectedPlace.longitude, selectedPlace.latitude],
-      zoom: Math.max(mapRef.current.getZoom(), 14),
-      duration: 500
+      zoom: Math.max(mapRef.current.getZoom(), 15.4),
+      padding: {
+        top: 110,
+        bottom: 300,
+        left: 48,
+        right: 48
+      },
+      duration: 650
     });
   }, [selectedPlace]);
 
