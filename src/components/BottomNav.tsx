@@ -16,7 +16,8 @@ export function BottomNav() {
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/95 px-4 py-3 shadow-soft backdrop-blur">
       <div className="mx-auto grid max-w-md grid-cols-3 gap-2">
         {navItems.map((item) => {
-          const active = pathname === item.href;
+          const active =
+            item.href === "/app/lists" ? pathname?.startsWith("/app/lists") : pathname === item.href;
           return (
             <Link
               key={item.href}

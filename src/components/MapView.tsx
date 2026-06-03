@@ -40,6 +40,11 @@ const singaporeStyle: maplibregl.StyleSpecification = {
   ]
 };
 
+function isNonFatalTileError(error: unknown) {
+  if (!(error instanceof Error)) return false;
+  return error.message.includes("tile.openstreetmap.org") || error.message.includes("Failed to fetch");
+}
+
 function toGeoJson(
   places: MergedPlace[],
   highlightedIds: string[],
@@ -73,6 +78,7 @@ export function MapView({ places, highlightedIds, selectedPlace, referencePoint,
     toGeoJson(places, highlightedIds, selectedPlace?.id)
   );
   const referenceMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const hasWarnedTileErrorRef = useRef(false);
 
   const geoJson = useMemo(
     () => toGeoJson(places, highlightedIds, selectedPlace?.id),
@@ -103,6 +109,18 @@ export function MapView({ places, highlightedIds, selectedPlace, referencePoint,
     });
 
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: false }), "top-right");
+
+    map.on("error", (event) => {
+      if (isNonFatalTileError(event.error)) {
+        if (!hasWarnedTileErrorRef.current) {
+          hasWarnedTileErrorRef.current = true;
+          console.warn("[Locco] Map tile request failed; keeping the map usable.");
+        }
+        return;
+      }
+
+      console.warn("[Locco] MapLibre reported a non-fatal map error.", event.error);
+    });
 
     map.on("load", () => {
       map.addSource("places", {

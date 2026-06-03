@@ -114,7 +114,7 @@ export function scorePlace(
 
 export async function recommendPlaces(query: string, selectedListIds: string[]) {
   const interpretedTags = extractTags(query);
-  const visiblePlaces = getPlacesForSelectedLists(selectedListIds);
+  const visiblePlaces = await getPlacesForSelectedLists(selectedListIds);
   const placeNameMatches = getPlaceNameMatches(query, visiblePlaces);
 
   if (!hasMeaningfulRecommendationSignal(query, interpretedTags, visiblePlaces, placeNameMatches)) {

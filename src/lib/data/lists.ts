@@ -1,26 +1,35 @@
 import { foodLists, foodPlaces } from "@/data/mockData";
 import type { FoodList } from "@/types";
+import { getSupabaseFoodData } from "@/lib/data/supabaseFoodData";
 
 export type FoodListWithCount = FoodList & {
   placeCount: number;
 };
 
-export function getFoodLists(): FoodList[] {
-  // MVP fallback: until Supabase persistence is wired, all list reads come from mock data.
-  return foodLists;
+export async function getFoodLists(): Promise<FoodList[]> {
+  const supabaseData = await getSupabaseFoodData();
+  return supabaseData?.lists.length ? supabaseData.lists : foodLists;
 }
 
-export function getFoodListsWithCounts(): FoodListWithCount[] {
-  return getFoodLists().map((list) => ({
+export async function getFoodListsWithCounts(): Promise<FoodListWithCount[]> {
+  const supabaseData = await getSupabaseFoodData();
+  const lists = supabaseData?.lists.length ? supabaseData.lists : foodLists;
+  const places = supabaseData?.places.length ? supabaseData.places : foodPlaces;
+
+  return lists.map((list) => ({
     ...list,
-    placeCount: foodPlaces.filter((place) => place.listIds.includes(list.id)).length
+    placeCount: places.filter((place) => place.listIds.includes(list.id)).length
   }));
 }
 
-export function getListById(listId: string): FoodList | null {
-  return getFoodLists().find((list) => list.id === listId) ?? null;
+export async function getListById(listId: string): Promise<FoodList | null> {
+  const lists = await getFoodLists();
+  return lists.find((list) => list.id === listId) ?? null;
 }
 
-export function getListPlaceCount(listId: string): number {
-  return foodPlaces.filter((place) => place.listIds.includes(listId)).length;
+export async function getListPlaceCount(listId: string): Promise<number> {
+  const supabaseData = await getSupabaseFoodData();
+  const places = supabaseData?.places.length ? supabaseData.places : foodPlaces;
+
+  return places.filter((place) => place.listIds.includes(listId)).length;
 }

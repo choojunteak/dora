@@ -8,9 +8,8 @@ export type CreateCommentInput = {
   comment: string;
 };
 
-export function getCommentsByPlaceId(placeId: string): PlaceComment[] {
-  // MVP fallback: comments are embedded in mock places until the comments table is connected.
-  return getPlaceById(placeId)?.comments ?? [];
+export async function getCommentsByPlaceId(placeId: string): Promise<PlaceComment[]> {
+  return (await getPlaceById(placeId))?.comments ?? [];
 }
 
 export async function createComment(input: CreateCommentInput) {

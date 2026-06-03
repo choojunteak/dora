@@ -4,12 +4,14 @@ import { PlaceCard } from "@/components/PlaceCard";
 import { getListById } from "@/lib/data/lists";
 import { getPlacesByListId } from "@/lib/data/places";
 
+export const dynamic = "force-dynamic";
+
 export default async function ListDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const list = getListById(id);
+  const list = await getListById(id);
   if (!list) notFound();
 
-  const places = getPlacesByListId(list.id);
+  const places = await getPlacesByListId(list.id);
 
   return (
     <main className="mx-auto max-w-4xl px-4 pb-24 pt-6">
@@ -43,7 +45,11 @@ export default async function ListDetailPage({ params }: { params: Promise<{ id:
 
       <section className="mt-5 grid gap-3 sm:grid-cols-2">
         {places.map((place) => (
-          <PlaceCard key={place.id} place={place} />
+          <PlaceCard
+            key={place.id}
+            place={place}
+            href={`/app/place/${place.id}?from=${encodeURIComponent(`/app/lists/${list.id}`)}`}
+          />
         ))}
       </section>
     </main>

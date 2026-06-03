@@ -3,9 +3,10 @@ import { PlaceCard } from "@/components/PlaceCard";
 import { getFoodLists } from "@/lib/data/lists";
 import { getFavouritePlaces } from "@/lib/data/places";
 
-export default function AppHomePage() {
-  const foodLists = getFoodLists();
-  const favourites = getFavouritePlaces(3);
+export const dynamic = "force-dynamic";
+
+export default async function AppHomePage() {
+  const [foodLists, favourites] = await Promise.all([getFoodLists(), getFavouritePlaces(3)]);
 
   return (
     <main className="mx-auto max-w-5xl px-4 pb-24 pt-6">

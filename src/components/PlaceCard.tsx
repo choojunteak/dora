@@ -9,43 +9,65 @@ import { TagChip } from "@/components/TagChip";
 
 type Props = {
   place: MergedPlace | RecommendationResult;
+  href?: string;
   onSelect?: (place: MergedPlace) => void;
   isLarge?: boolean;
 };
 
-export function PlaceCard({ place, onSelect, isLarge }: Props) {
+export function PlaceCard({ place, href, onSelect, isLarge }: Props) {
   const distance = "distanceMeters" in place ? formatDistance(place.distanceMeters) : null;
+  const isClickable = Boolean(onSelect || href);
+  const cardBody = (
+    <>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wide text-tomato">
+            {place.categories[0]} · {place.priceRange}
+            {distance ? ` · ${distance}` : ""}
+          </p>
+          <h3 className={`${isLarge ? "text-3xl" : "text-lg"} mt-1 font-black text-ink`}>
+            {place.name}
+          </h3>
+          <p className="mt-1 text-sm leading-5 text-stone-600">{place.address}</p>
+        </div>
+        <FriendAvatarStack listIds={place.selectedListIds} />
+      </div>
+      <p className="mt-3 text-sm leading-6 text-stone-700">{place.notes}</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {[...place.categories, ...place.moodTags].slice(0, isLarge ? 12 : 5).map((tag) => (
+          <TagChip key={tag} label={tag} />
+        ))}
+      </div>
+      <p className="mt-3 text-xs font-semibold text-stone-500">
+        Saved by {place.savedBySelected.join(", ")}
+      </p>
+    </>
+  );
 
   return (
-    <article className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-stone-200">
-      <button
-        type="button"
-        onClick={() => onSelect?.(place)}
-        className="block w-full text-left"
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-tomato">
-              {place.categories[0]} · {place.priceRange}
-              {distance ? ` · ${distance}` : ""}
-            </p>
-            <h3 className={`${isLarge ? "text-3xl" : "text-lg"} mt-1 font-black text-ink`}>
-              {place.name}
-            </h3>
-            <p className="mt-1 text-sm leading-5 text-stone-600">{place.address}</p>
-          </div>
-          <FriendAvatarStack listIds={place.selectedListIds} />
-        </div>
-        <p className="mt-3 text-sm leading-6 text-stone-700">{place.notes}</p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {[...place.categories, ...place.moodTags].slice(0, isLarge ? 12 : 5).map((tag) => (
-            <TagChip key={tag} label={tag} />
-          ))}
-        </div>
-        <p className="mt-3 text-xs font-semibold text-stone-500">
-          Saved by {place.savedBySelected.join(", ")}
-        </p>
-      </button>
+    <article
+      className={`rounded-lg bg-white p-4 shadow-sm ring-1 ring-stone-200 ${
+        isClickable ? "transition hover:-translate-y-0.5 hover:shadow-soft" : ""
+      }`}
+    >
+      {href && !onSelect ? (
+        <Link
+          href={href}
+          className="block w-full rounded-md text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-stone-300"
+        >
+          {cardBody}
+        </Link>
+      ) : onSelect ? (
+        <button
+          type="button"
+          onClick={() => onSelect(place)}
+          className="block w-full rounded-md text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-stone-300"
+        >
+          {cardBody}
+        </button>
+      ) : (
+        <div>{cardBody}</div>
+      )}
 
       {isLarge ? (
         <div className="mt-5 space-y-3">

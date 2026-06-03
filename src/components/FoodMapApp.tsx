@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { FoodPlace, MergedPlace, OneMapResult, RecommendationResult } from "@/types";
+import type { FoodList, FoodPlace, MergedPlace, OneMapResult, RecommendationResult } from "@/types";
 import { distanceMeters } from "@/utils/distance";
 import { getVisiblePlaces } from "@/utils/places";
 import { AddPlaceModal } from "@/components/AddPlaceModal";
@@ -17,18 +17,17 @@ import { PlaceBottomSheet } from "@/components/PlaceBottomSheet";
 import { PlaceCard } from "@/components/PlaceCard";
 import { SearchLocationBox } from "@/components/SearchLocationBox";
 import { SelectedListChips } from "@/components/SelectedListChips";
-import { getFoodLists } from "@/lib/data/lists";
-import { getAllFoodPlaces } from "@/lib/data/places";
 
 type Props = {
+  foodLists: FoodList[];
+  foodPlaces: FoodPlace[];
   initialSelectedListIds?: string[];
 };
 
-export function FoodMapApp({ initialSelectedListIds }: Props) {
+export function FoodMapApp({ foodLists, foodPlaces, initialSelectedListIds }: Props) {
   const router = useRouter();
-  const foodLists = getFoodLists();
   const defaultListIds = useMemo(() => foodLists.map((list) => list.id), [foodLists]);
-  const [places, setPlaces] = useState<FoodPlace[]>(() => getAllFoodPlaces());
+  const [places, setPlaces] = useState<FoodPlace[]>(() => foodPlaces);
   const [selectedListIds, setSelectedListIds] = useState(() => {
     const validIds = new Set(defaultListIds);
     const fromUrl = [...new Set(initialSelectedListIds?.filter((id) => validIds.has(id)) ?? [])];

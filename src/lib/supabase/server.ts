@@ -1,26 +1,43 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
+import {
+  getSupabasePublishableKey,
+  getSupabaseUrl,
+  hasSupabasePublicEnv
+} from "@/lib/supabase/env";
+
+const SUPABASE_READ_TIMEOUT_MS = 5000;
+
+function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), SUPABASE_READ_TIMEOUT_MS);
+
+  return fetch(input, {
+    ...init,
+    signal: init?.signal ?? controller.signal
+  }).finally(() => clearTimeout(timeout));
+}
 
 export function hasSupabaseServerEnv() {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.SUPABASE_SERVICE_ROLE_KEY
-  );
+  return hasSupabasePublicEnv();
 }
 
 export function createServerSupabaseClient(): SupabaseClient<Database> | null {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = getSupabaseUrl();
+  const supabaseKey = getSupabasePublishableKey();
 
-  if (!supabaseUrl || !serviceRoleKey) {
-    // Server routes should treat null as "use mock fallback" until real persistence is enabled.
+  if (!supabaseUrl || !supabaseKey) {
+    // Missing public Supabase env values means server reads should keep using mock data.
     return null;
   }
 
-  return createClient<Database>(supabaseUrl, serviceRoleKey, {
+  return createClient<Database>(supabaseUrl, supabaseKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false
+    },
+    global: {
+      fetch: fetchWithTimeout
     }
   });
 }

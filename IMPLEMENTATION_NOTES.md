@@ -8,7 +8,7 @@ Latest focused update: `/app/map` now has a compact floating Home / Map / Lists 
 
 Supabase seed update: the database setup now uses stable readable text IDs that match the current mock data, and `supabase/seed.sql` can insert the demo users, lists, places, saved-place relationships, tags, comments, and source links.
 
-Supabase foundation update: the project now includes Supabase client factories, database types, and a mock-backed data access layer. The current UI still runs on mock data until credentials and real query implementations are added.
+Supabase read-only update: the project now reads demo lists, places, saved-place relationships, tags, comments, and source links from Supabase when public env values are present and the queries succeed. Missing env values, failed queries, or incomplete demo data still fall back to local mock data.
 
 URL persistence update: selected food lists on `/app/map` now sync live into the `lists` query parameter, so a filtered map view can be shared or recovered.
 
@@ -146,13 +146,15 @@ If none are found, the API returns no results and the UI shows a helpful no-conf
 
 The map page accepts `?lists=<listId>` and starts with only that list selected.
 
-## Supabase Foundation
+## Supabase Read-Only Data
 
 `@supabase/supabase-js` is installed. The Supabase helpers are intentionally safe during MVP development:
 
-- `createBrowserSupabaseClient()` returns a typed Supabase client when `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` exist.
-- `createServerSupabaseClient()` returns a typed service-role client when `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` exist.
+- `createBrowserSupabaseClient()` returns a typed Supabase client when `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` exist.
+- `createServerSupabaseClient()` uses the same public Supabase key for read-only server data loading.
+- The old `NEXT_PUBLIC_SUPABASE_ANON_KEY` name remains supported as a fallback if it already exists.
 - If env values are missing, both helpers return `null`.
+- The app does not use `SUPABASE_SERVICE_ROLE_KEY`, `sb_secret_*`, or any private Supabase key in client-side code.
 
 `supabase/schema.sql` now prepares the current MVP data shape:
 
@@ -176,7 +178,7 @@ IDs are text with UUID defaults. This keeps the seeded MVP rows readable, such a
 - Category and mood tags
 - Existing notes, comments, ratings, statuses, and source links
 
-The data access layer in `src/lib/data/` currently returns mock data and includes comments marking where Supabase queries should replace the fallback. Page-level reads now use these helpers where practical:
+The data access layer in `src/lib/data/` now keeps the UI-facing return shape stable while reading from Supabase first:
 
 - `getFoodLists()`
 - `getFoodListsWithCounts()`
@@ -188,7 +190,7 @@ The data access layer in `src/lib/data/` currently returns mock data and include
 - `createSavedPlace(input)`
 - `getCommentsByPlaceId(placeId)`
 
-This keeps the app working without Supabase credentials while giving the next pass a clear integration boundary.
+The read combiner queries `profiles`, `food_lists`, `places`, `saved_places`, `place_tags`, `comments`, and `place_sources`, then maps those rows into the existing `FoodList` and `FoodPlace` shapes. This keeps the app working without Supabase credentials while letting the current UI use seeded Supabase data when available.
 
 ## Supabase Manual Setup
 
@@ -197,10 +199,12 @@ This keeps the app working without Supabase credentials while giving the next pa
 3. Run `supabase/schema.sql`.
 4. Run `supabase/seed.sql`.
 5. Copy `.env.example` to `.env.local` only when testing Supabase clients locally.
-6. Fill in `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`.
+6. Fill in `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
 7. Keep `.env.local` out of git.
 
-Live Supabase reads are not connected yet after this pass. The seeded database is ready for the future data-layer integration, but the current UI still uses mock data.
+`NEXT_PUBLIC_SUPABASE_ANON_KEY` is still accepted as a legacy fallback if that is the key name already in the local environment. Private service-role or `sb_secret_*` keys should not be added for this read-only MVP path.
+
+With Supabase enabled, restart the dev server and check `/app/map`, `/app/lists`, `/app/lists/list_annj`, `/app/place/wild-honey`, selected-list URL persistence, and Ask Locco recommendations. To test fallback, rename `.env.local` to `.env.local.off` or remove the Supabase values, restart the dev server, and confirm the same routes still load from mock data.
 
 ## Manual Test Steps
 
@@ -230,7 +234,7 @@ Live Supabase reads are not connected yet after this pass. The seeded database i
 24. Confirm `/app/map?lists=<listId>` loads with only that list selected.
 25. Confirm the app still runs without `.env.local`.
 26. Optional: create a Supabase project, run `supabase/schema.sql`, then run `supabase/seed.sql`.
-27. Optional: add Supabase values to `.env.local` and confirm the app still builds; live queries are not enabled yet.
+27. Optional: add Supabase values to `.env.local`, restart the dev server, and confirm seeded data appears through the same UI flows.
 
 ## Known Limitations
 
@@ -242,12 +246,12 @@ Live Supabase reads are not connected yet after this pass. The seeded database i
 - Recommended pins are highlighted only while Ask Locco results are active.
 - The list filter now persists in the URL, but the URL is only updated while the user is on `/app/map`.
 - The compact map navigation is intentionally separate from the full app bottom nav, so nav styling is duplicated lightly for now.
-- Supabase schema and seed files are prepared, but the data layer still returns mock data.
+- Supabase is read-only. Add-place saves, comments, list edits, and persistence are still local/future work.
+- Supabase falls back to mock data if any required demo read is empty or a query fails.
 - No real authentication or Supabase persistence is connected yet.
 
 ## Recommended Next Fixes
 
 - Add a compact mobile place-results drawer after recommendation queries.
-- Replace mock data helper bodies with Supabase queries.
 - Add Supabase auth and saved-place persistence.
 - Add proper PWA icons and service worker.

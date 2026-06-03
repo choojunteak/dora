@@ -60,75 +60,92 @@ export function PlaceBottomSheet({
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        <FriendAvatarStack listIds={place.selectedListIds} />
-        <p className="text-sm font-semibold text-stone-600">
-          Saved by {place.savedBySelected.join(", ")}
-        </p>
-      </div>
-
-      <p className="mt-3 text-sm leading-6 text-stone-700">{place.notes}</p>
-
-      <div className="mt-3 flex flex-wrap gap-2">
-        {[...place.categories, ...place.moodTags].map((tag) => (
-          <TagChip key={tag} label={tag} />
-        ))}
-      </div>
-
-      <div className="mt-4 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={onSave}
-          className="rounded-full bg-tomato px-3 py-2 text-xs font-bold text-white"
-        >
-          Save
-        </button>
-        <a
-          href={googleMapsLink(place)}
-          target="_blank"
-          rel="noreferrer"
-          className="rounded-full bg-ink px-3 py-2 text-xs font-bold text-white"
-        >
-          Google Maps
-        </a>
-        <a
-          href={appleMapsLink(place)}
-          target="_blank"
-          rel="noreferrer"
-          className="rounded-full bg-white px-3 py-2 text-xs font-bold text-ink ring-1 ring-stone-200"
-        >
-          Apple Maps
-        </a>
-        <Link
-          href={`/app/place/${place.id}`}
-          className="rounded-full bg-stone-100 px-3 py-2 text-xs font-bold text-stone-700"
-        >
-          Details
-        </Link>
-      </div>
-
-      <div className="mt-4 space-y-2">
-        {place.comments.map((comment) => (
-          <p key={`${comment.author}-${comment.text}`} className="text-sm text-stone-600">
-            <span className="font-bold text-ink">{comment.author}:</span> {comment.text}
+      <section className="mt-3 border-t border-stone-100 pt-3">
+        <div className="flex items-center gap-3">
+          <FriendAvatarStack listIds={place.selectedListIds} />
+          <p className="text-sm font-semibold text-stone-600">
+            Saved by {place.savedBySelected.join(", ")}
           </p>
-        ))}
-      </div>
+        </div>
+      </section>
 
-      {place.sources.length ? (
-        <div className="mt-4 flex flex-wrap gap-2">
-          {place.sources.map((source) => (
-            <a
-              key={source.url}
-              href={source.url}
-              target="_blank"
-              rel="noreferrer"
-              className="text-xs font-bold text-tomato underline"
-            >
-              {source.type} source
-            </a>
+      <section className="mt-3 border-t border-stone-100 pt-3">
+        <p className="text-xs font-black uppercase tracking-wide text-stone-400">Notes</p>
+        <p className="mt-1 text-sm leading-6 text-stone-700">{place.notes}</p>
+      </section>
+
+      <section className="mt-3 border-t border-stone-100 pt-3">
+        <p className="text-xs font-black uppercase tracking-wide text-stone-400">Tags</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {[...place.categories, ...place.moodTags].map((tag) => (
+            <TagChip key={tag} label={tag} />
           ))}
         </div>
+      </section>
+
+      <section className="mt-3 border-t border-stone-100 pt-3">
+        <p className="text-xs font-black uppercase tracking-wide text-stone-400">Actions</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={onSave}
+            className="rounded-full bg-tomato px-3 py-2 text-xs font-bold text-white"
+          >
+            Save
+          </button>
+          <a
+            href={googleMapsLink(place)}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-full bg-ink px-3 py-2 text-xs font-bold text-white"
+          >
+            Google Maps
+          </a>
+          <a
+            href={appleMapsLink(place)}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-full bg-white px-3 py-2 text-xs font-bold text-ink ring-1 ring-stone-200"
+          >
+            Apple Maps
+          </a>
+          <Link
+            href={`/app/place/${place.id}`}
+            className="rounded-full bg-stone-100 px-3 py-2 text-xs font-bold text-stone-700"
+          >
+            Details
+          </Link>
+        </div>
+      </section>
+
+      {place.comments.length ? (
+        <section className="mt-3 space-y-2 border-t border-stone-100 pt-3">
+          <p className="text-xs font-black uppercase tracking-wide text-stone-400">Comments</p>
+          {place.comments.map((comment) => (
+            <p key={`${comment.author}-${comment.text}`} className="text-sm text-stone-600">
+              <span className="font-bold text-ink">{comment.author}:</span> {comment.text}
+            </p>
+          ))}
+        </section>
+      ) : null}
+
+      {place.sources.length ? (
+        <section className="mt-3 border-t border-stone-100 pt-3">
+          <p className="text-xs font-black uppercase tracking-wide text-stone-400">Sources</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {place.sources.map((source) => (
+              <a
+                key={source.url}
+                href={source.url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs font-bold text-tomato underline"
+              >
+                {source.type} source
+              </a>
+            ))}
+          </div>
+        </section>
       ) : null}
     </section>
   );

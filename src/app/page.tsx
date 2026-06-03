@@ -1,11 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Fraunces } from "next/font/google";
-
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  weight: ["700", "800", "900"],
-});
 
 export default function LandingPage() {
   return (
@@ -26,7 +20,7 @@ export default function LandingPage() {
         </Link>
 
         <h1
-          className={`${fraunces.className} max-w-5xl text-5xl font-black leading-[0.9] tracking-[-0.04em] text-forest sm:text-6xl lg:text-7xl`}
+          className="max-w-5xl font-serif text-5xl font-black leading-[0.9] tracking-[-0.04em] text-forest sm:text-6xl lg:text-7xl"
         >
           But where should we go....
         </h1>

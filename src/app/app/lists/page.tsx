@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { getFoodListsWithCounts } from "@/lib/data/lists";
 
-export default function ListsPage() {
-  const foodLists = getFoodListsWithCounts();
+export const dynamic = "force-dynamic";
+
+export default async function ListsPage() {
+  const foodLists = await getFoodListsWithCounts();
 
   return (
     <main className="mx-auto max-w-5xl px-4 pb-24 pt-6">
@@ -22,7 +24,7 @@ export default function ListsPage() {
             <Link
               key={list.id}
               href={`/app/lists/${list.id}`}
-              className="block rounded-lg bg-white p-5 shadow-sm ring-1 ring-stone-200 transition hover:-translate-y-0.5 hover:shadow-soft"
+              className="group block rounded-lg bg-white p-5 shadow-sm ring-1 ring-stone-200 transition hover:-translate-y-0.5 hover:shadow-soft focus:outline-none focus:ring-2 focus:ring-tomato"
             >
               <div className="flex items-start gap-4">
                 <div
@@ -37,6 +39,9 @@ export default function ListsPage() {
                     {list.ownerName} saves - {list.placeCount} places
                   </p>
                   <p className="mt-3 text-sm leading-6 text-stone-600">{list.description}</p>
+                  <span className="mt-4 inline-flex rounded-full bg-stone-100 px-3 py-2 text-xs font-black text-ink transition group-hover:bg-ink group-hover:text-white">
+                    View list
+                  </span>
                 </div>
               </div>
             </Link>

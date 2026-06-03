@@ -20,7 +20,7 @@ Locco is a Singapore-focused social food map MVP. The core idea is: show me food
 - Tailwind CSS
 - MapLibre GL JS
 - OneMap Singapore search API route
-- Supabase JS client foundation with mock-data fallback
+- Read-only Supabase data access with mock-data fallback
 
 ## Run Locally
 
@@ -68,44 +68,60 @@ ONEMAP_EMAIL=
 ONEMAP_PASSWORD=
 NEXT_PUBLIC_APP_URL=
 NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+# Optional legacy fallback:
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-OPENAI_API_KEY=
 ```
 
-The MVP does not require these values to run. OneMap search currently uses the public search endpoint and falls back to local known Singapore locations if the live call fails.
+The MVP does not require these values to run. For Supabase reads, Locco prefers `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and still accepts the older `NEXT_PUBLIC_SUPABASE_ANON_KEY` name for compatibility. Do not add `SUPABASE_SERVICE_ROLE_KEY`, `sb_secret_*`, or other private Supabase keys to client-side env variables.
+
+OneMap search currently uses the public search endpoint and falls back to local known Singapore locations if the live call fails.
 
 ## Supabase Setup
 
-The project includes a Supabase foundation, but the app still runs without Supabase credentials.
+The project includes a read-only Supabase connection, and the app still runs without Supabase credentials.
 
 1. Create a Supabase project.
 2. Open the Supabase SQL editor.
 3. Run `supabase/schema.sql` to create the MVP tables.
 4. Run `supabase/seed.sql` to insert the current Locco demo lists, places, tags, comments, sources, and saved-place relationships.
-5. Copy `.env.example` to `.env.local` only when you are ready to test Supabase clients locally.
+5. Copy `.env.example` to `.env.local` only when you are ready to test Supabase reads locally.
 6. Fill in:
 
 ```text
 NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 ```
 
-Do not commit `.env.local`.
+If your Supabase project still shows the older public anon key name, you can use `NEXT_PUBLIC_SUPABASE_ANON_KEY=` instead. Do not commit `.env.local`.
 
-Important: after this setup pass, the UI still reads from `src/data/mockData.ts` through the mock-backed helpers in `src/lib/data/`. Running the schema and seed prepares the database; it does not switch the app to live Supabase reads yet.
+When Supabase env values are present and all demo read queries succeed, `src/lib/data/` reads lists, places, saved-place relationships, tags, comments, and source links from Supabase. If env values are missing, any query fails, or the expected demo data is empty, Locco falls back to `src/data/mockData.ts`.
 
 Current Supabase files:
 
 - `src/lib/supabase/client.ts` - browser-safe client factory
-- `src/lib/supabase/server.ts` - service-role server client factory for future routes
+- `src/lib/supabase/server.ts` - server read client factory using the public Supabase key
 - `src/lib/supabase/types.ts` - typed database shape matching `schema.sql`
 - `supabase/schema.sql` - MVP database tables for demo owners, lists, places, saves, tags, comments, and sources
 - `supabase/seed.sql` - idempotent seed for the current mock Locco data
-- `src/lib/data/` - data access helpers that currently return mock data
+- `src/lib/data/` - data access helpers with read-only Supabase queries and mock fallback
 
-If Supabase env values are missing, the client helpers return `null` and the data layer keeps using mock data. This is intentional so the MVP remains demoable during development.
+## Testing Supabase And Fallback
+
+With Supabase enabled:
+
+1. Make sure `supabase/schema.sql` and `supabase/seed.sql` have both run successfully.
+2. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` to `.env.local`.
+3. Restart the dev server with `npm.cmd run dev`.
+4. Open `/app/map`, `/app/lists`, a list detail page, and a place detail page.
+5. Ask Locco for something like `dessert near Orchard MRT` and confirm recommendations still appear.
+
+To test mock fallback:
+
+1. Stop the dev server.
+2. Rename `.env.local` to something like `.env.local.off`, or remove the Supabase values.
+3. Restart with `npm.cmd run dev`.
+4. Confirm the same pages still load and Ask Locco still returns demo recommendations.
 
 ## Important Files
 
@@ -117,7 +133,7 @@ If Supabase env values are missing, the client helpers return `null` and the dat
 - `src/components/ChatRecommendationPanel.tsx` - recommendation chat UI
 - `src/utils/recommendations.ts` - rule-based parsing and scoring
 - `src/data/mockData.ts` - mock lists and Singapore food places
-- `src/lib/data/` - mock-backed data access layer for future Supabase queries
+- `src/lib/data/` - read-only Supabase data access with mock fallback
 - `src/lib/supabase/` - Supabase client/server/type foundation
 - `src/app/app/lists/[id]/page.tsx` - list detail route
 - `src/app/api/onemap/search/route.ts` - server-side OneMap search route
@@ -128,8 +144,7 @@ If Supabase env values are missing, the client helpers return `null` and the dat
 ## Current MVP Limitations
 
 - Authentication is mocked.
-- Supabase schema and seed files are prepared but not yet used for live persistence.
-- Food lists, places, comments, tags, and source links still read from local mock data.
+- Supabase reads are read-only and fall back to mock data whenever env values are missing, queries fail, or seeded demo data is incomplete.
 - Places saved through the add modal only live in browser state until refresh.
 - Recommendation logic is deterministic keyword matching, not an LLM yet.
 - Map tiles use OpenStreetMap raster tiles for a simple no-key MVP.
@@ -138,7 +153,6 @@ If Supabase env values are missing, the client helpers return `null` and the dat
 
 ## Next Steps
 
-- Replace the mock-backed data helpers in `src/lib/data/` with Supabase queries.
 - Connect Supabase auth.
 - Persist list saves, comments, tags, and sources.
 - Add friend invitations and list privacy.

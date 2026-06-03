@@ -90,20 +90,74 @@ create index if not exists idx_place_tags_tag on place_tags(tag);
 create index if not exists idx_comments_place_id on comments(place_id);
 create index if not exists idx_place_sources_place_id on place_sources(place_id);
 
--- Suggested RLS direction for later, after authentication is connected:
--- alter table profiles enable row level security;
--- alter table friendships enable row level security;
--- alter table food_lists enable row level security;
--- alter table places enable row level security;
--- alter table saved_places enable row level security;
--- alter table place_tags enable row level security;
--- alter table comments enable row level security;
--- alter table place_sources enable row level security;
---
--- Policy ideas:
--- 1. Users can read public lists.
--- 2. Users can read friends-only lists when an accepted friendship exists.
--- 3. Users can insert/update/delete their own lists and saved_places rows.
--- 4. Places, place_tags, and place_sources can be read by authenticated users.
--- 5. Comments can be managed by their author.
--- 6. Service-role-only maintenance should stay server-side and never use the anon key.
+grant usage on schema public to anon, authenticated;
+
+grant select on table
+  profiles,
+  food_lists,
+  places,
+  saved_places,
+  place_tags,
+  comments,
+  place_sources
+to anon, authenticated;
+
+alter table profiles enable row level security;
+alter table food_lists enable row level security;
+alter table places enable row level security;
+alter table saved_places enable row level security;
+alter table place_tags enable row level security;
+alter table comments enable row level security;
+alter table place_sources enable row level security;
+
+drop policy if exists "Demo profiles are readable" on profiles;
+create policy "Demo profiles are readable"
+on profiles
+for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "Demo food lists are readable" on food_lists;
+create policy "Demo food lists are readable"
+on food_lists
+for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "Demo places are readable" on places;
+create policy "Demo places are readable"
+on places
+for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "Demo saved places are readable" on saved_places;
+create policy "Demo saved places are readable"
+on saved_places
+for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "Demo place tags are readable" on place_tags;
+create policy "Demo place tags are readable"
+on place_tags
+for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "Demo comments are readable" on comments;
+create policy "Demo comments are readable"
+on comments
+for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "Demo place sources are readable" on place_sources;
+create policy "Demo place sources are readable"
+on place_sources
+for select
+to anon, authenticated
+using (true);
+
+-- No insert, update, or delete policies are included for the read-only MVP.
+-- Add authenticated write policies later, after auth and RLS rules are designed.

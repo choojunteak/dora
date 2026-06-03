@@ -1,11 +1,12 @@
 import type { FoodPlace } from "@/types";
 import { getAllFoodPlaces } from "@/lib/data/places";
 
-export function searchPlaces(query: string, places: FoodPlace[] = getAllFoodPlaces()) {
+export async function searchPlaces(query: string, places?: FoodPlace[]) {
+  const searchablePlaces = places ?? (await getAllFoodPlaces());
   const normalized = query.trim().toLowerCase();
-  if (!normalized) return places;
+  if (!normalized) return searchablePlaces;
 
-  return places.filter((place) => {
+  return searchablePlaces.filter((place) => {
     const haystack = [
       place.name,
       place.address,

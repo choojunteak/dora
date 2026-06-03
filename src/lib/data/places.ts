@@ -2,24 +2,27 @@ import { foodPlaces } from "@/data/mockData";
 import type { FoodPlace, MergedPlace } from "@/types";
 import { getVisiblePlaces } from "@/utils/places";
 import { getFoodLists, getListById } from "@/lib/data/lists";
+import { getSupabaseFoodData } from "@/lib/data/supabaseFoodData";
 
-export function getAllFoodPlaces(): FoodPlace[] {
-  // MVP fallback: this is the single read boundary to replace with Supabase place queries later.
-  return foodPlaces;
+export async function getAllFoodPlaces(): Promise<FoodPlace[]> {
+  const supabaseData = await getSupabaseFoodData();
+  return supabaseData?.places.length ? supabaseData.places : foodPlaces;
 }
 
-export function getPlaceById(placeId: string): FoodPlace | null {
-  return getAllFoodPlaces().find((place) => place.id === placeId) ?? null;
+export async function getPlaceById(placeId: string): Promise<FoodPlace | null> {
+  const places = await getAllFoodPlaces();
+  return places.find((place) => place.id === placeId) ?? null;
 }
 
-export function getPlacesForSelectedLists(listIds: string[]): MergedPlace[] {
-  return getVisiblePlaces(getAllFoodPlaces(), listIds);
+export async function getPlacesForSelectedLists(listIds: string[]): Promise<MergedPlace[]> {
+  return getVisiblePlaces(await getAllFoodPlaces(), listIds);
 }
 
-export function getPlacesByListId(listId: string): MergedPlace[] {
-  const list = getListById(listId);
+export async function getPlacesByListId(listId: string): Promise<MergedPlace[]> {
+  const list = await getListById(listId);
+  const places = await getAllFoodPlaces();
 
-  return getAllFoodPlaces()
+  return places
     .filter((place) => place.listIds.includes(listId))
     .map((place) => ({
       ...place,
@@ -28,10 +31,11 @@ export function getPlacesByListId(listId: string): MergedPlace[] {
     }));
 }
 
-export function getFavouritePlaces(limit = 3): MergedPlace[] {
-  const lists = getFoodLists();
+export async function getFavouritePlaces(limit = 3): Promise<MergedPlace[]> {
+  const lists = await getFoodLists();
+  const places = await getAllFoodPlaces();
 
-  return getAllFoodPlaces()
+  return places
     .filter((place) => place.status === "favourite")
     .slice(0, limit)
     .map((place) => ({
