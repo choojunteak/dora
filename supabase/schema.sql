@@ -1,7 +1,7 @@
 create extension if not exists "pgcrypto";
 
 create table if not exists profiles (
-  id text primary key default gen_random_uuid()::text,
+  id uuid primary key references auth.users(id) on delete cascade,
   username text unique not null,
   display_name text not null,
   avatar_initials text not null,
@@ -12,8 +12,8 @@ create table if not exists profiles (
 
 create table if not exists friendships (
   id text primary key default gen_random_uuid()::text,
-  requester_id text not null references profiles(id) on delete cascade,
-  addressee_id text not null references profiles(id) on delete cascade,
+  requester_id uuid not null references profiles(id) on delete cascade,
+  addressee_id uuid not null references profiles(id) on delete cascade,
   status text not null default 'accepted' check (status in ('pending', 'accepted', 'blocked')),
   created_at timestamptz not null default now(),
   unique (requester_id, addressee_id),
@@ -22,7 +22,7 @@ create table if not exists friendships (
 
 create table if not exists food_lists (
   id text primary key default gen_random_uuid()::text,
-  owner_id text not null references profiles(id) on delete cascade,
+  owner_id uuid not null references profiles(id) on delete cascade,
   name text not null,
   description text not null default '',
   color text not null default '#f36b4f',
@@ -47,7 +47,7 @@ create table if not exists saved_places (
   id text primary key default gen_random_uuid()::text,
   list_id text not null references food_lists(id) on delete cascade,
   place_id text not null references places(id) on delete cascade,
-  user_id text not null references profiles(id) on delete cascade,
+  user_id uuid not null references profiles(id) on delete cascade,
   note text,
   status text not null default 'want_to_try' check (status in ('want_to_try', 'tried', 'favourite')),
   rating numeric(2, 1) check (rating >= 0 and rating <= 5),
@@ -66,7 +66,7 @@ create table if not exists place_tags (
 create table if not exists comments (
   id text primary key default gen_random_uuid()::text,
   place_id text not null references places(id) on delete cascade,
-  user_id text not null references profiles(id) on delete cascade,
+  user_id uuid not null references profiles(id) on delete cascade,
   comment text not null,
   created_at timestamptz not null default now()
 );

@@ -1,12 +1,26 @@
 begin;
 
+-- Demo/test fixture users for local and staging/testing only.
+-- Do not run this seed against production.
+--
+-- profiles.id references auth.users(id), so matching demo/test Auth users
+-- with these exact UUIDs must exist before this seed inserts profiles.
+-- This seed intentionally does not insert into auth.users directly.
+--
+-- Deterministic demo/test Auth user IDs:
+-- You:      11111111-1111-4111-8111-111111111111
+-- Annj:     22222222-2222-4222-8222-222222222222
+-- Ryan:     33333333-3333-4333-8333-333333333333
+-- Isabella: 44444444-4444-4444-8444-444444444444
+-- Josh:     55555555-5555-4555-8555-555555555555
+
 insert into profiles (id, username, display_name, avatar_initials, is_demo)
 values
-  ('user_you', 'you', 'You', 'You', true),
-  ('user_annj', 'annj', 'Annj', 'AN', true),
-  ('user_ryan', 'ryan', 'Ryan', 'RY', true),
-  ('user_isabella', 'isabella', 'Isabella', 'IZ', true),
-  ('user_josh', 'josh', 'Josh', 'JO', true)
+  ('11111111-1111-4111-8111-111111111111', 'you', 'You', 'You', true),
+  ('22222222-2222-4222-8222-222222222222', 'annj', 'Annj', 'AN', true),
+  ('33333333-3333-4333-8333-333333333333', 'ryan', 'Ryan', 'RY', true),
+  ('44444444-4444-4444-8444-444444444444', 'isabella', 'Isabella', 'IZ', true),
+  ('55555555-5555-4555-8555-555555555555', 'josh', 'Josh', 'JO', true)
 on conflict (id) do update set
   username = excluded.username,
   display_name = excluded.display_name,
@@ -15,10 +29,10 @@ on conflict (id) do update set
 
 insert into friendships (id, requester_id, addressee_id, status)
 values
-  ('friend_you_annj', 'user_you', 'user_annj', 'accepted'),
-  ('friend_you_ryan', 'user_you', 'user_ryan', 'accepted'),
-  ('friend_you_isabella', 'user_you', 'user_isabella', 'accepted'),
-  ('friend_you_josh', 'user_you', 'user_josh', 'accepted')
+  ('friend_you_annj', '11111111-1111-4111-8111-111111111111', '22222222-2222-4222-8222-222222222222', 'accepted'),
+  ('friend_you_ryan', '11111111-1111-4111-8111-111111111111', '33333333-3333-4333-8333-333333333333', 'accepted'),
+  ('friend_you_isabella', '11111111-1111-4111-8111-111111111111', '44444444-4444-4444-8444-444444444444', 'accepted'),
+  ('friend_you_josh', '11111111-1111-4111-8111-111111111111', '55555555-5555-4555-8555-555555555555', 'accepted')
 on conflict (id) do update set
   requester_id = excluded.requester_id,
   addressee_id = excluded.addressee_id,
@@ -26,11 +40,11 @@ on conflict (id) do update set
 
 insert into food_lists (id, owner_id, name, description, color, privacy)
 values
-  ('list_my', 'user_you', 'My Food List', 'Personal saves for weekday meals and weekend plans.', '#f36b4f', 'private'),
-  ('list_annj', 'user_annj', 'Annj Noms Cafes', 'Aesthetic cafes, pastries, matcha, and study spots.', '#7bdcb5', 'friends'),
-  ('list_ryan', 'user_ryan', 'Ryan''s Date Spots', 'Low-pressure dinner spots that feel a little special.', '#a78bfa', 'friends'),
-  ('list_isabella', 'user_isabella', 'Isabella''s Dessert List', 'Desserts worth making a stop for.', '#ffb84d', 'friends'),
-  ('list_josh', 'user_josh', 'Josh''s Cheap Eats', 'Good value meals near MRT stations.', '#60a5fa', 'friends')
+  ('list_my', '11111111-1111-4111-8111-111111111111', 'My Food List', 'Personal saves for weekday meals and weekend plans.', '#f36b4f', 'private'),
+  ('list_annj', '22222222-2222-4222-8222-222222222222', 'Annj Noms Cafes', 'Aesthetic cafes, pastries, matcha, and study spots.', '#7bdcb5', 'friends'),
+  ('list_ryan', '33333333-3333-4333-8333-333333333333', 'Ryan''s Date Spots', 'Low-pressure dinner spots that feel a little special.', '#a78bfa', 'friends'),
+  ('list_isabella', '44444444-4444-4444-8444-444444444444', 'Isabella''s Dessert List', 'Desserts worth making a stop for.', '#ffb84d', 'friends'),
+  ('list_josh', '55555555-5555-4555-8555-555555555555', 'Josh''s Cheap Eats', 'Good value meals near MRT stations.', '#60a5fa', 'friends')
 on conflict (id) do update set
   owner_id = excluded.owner_id,
   name = excluded.name,
@@ -85,42 +99,42 @@ on conflict (id) do update set
 
 insert into saved_places (id, list_id, place_id, user_id, status, rating)
 values
-  ('save_wild_honey_list_my', 'list_my', 'wild-honey', 'user_you', 'tried', 4.2),
-  ('save_wild_honey_list_ryan', 'list_ryan', 'wild-honey', 'user_ryan', 'tried', 4.2),
-  ('save_matchaya_takashimaya_list_isabella', 'list_isabella', 'matchaya-takashimaya', 'user_isabella', 'favourite', 4.6),
-  ('save_matchaya_takashimaya_list_my', 'list_my', 'matchaya-takashimaya', 'user_you', 'favourite', 4.6),
-  ('save_surrey_hills_313_list_annj', 'list_annj', 'surrey-hills-313', 'user_annj', 'want_to_try', 4.0),
-  ('save_five_guys_plaza_sing_list_josh', 'list_josh', 'five-guys-plaza-sing', 'user_josh', 'tried', 3.9),
-  ('save_bearded_bella_list_annj', 'list_annj', 'bearded-bella', 'user_annj', 'favourite', 4.5),
-  ('save_bearded_bella_list_ryan', 'list_ryan', 'bearded-bella', 'user_ryan', 'favourite', 4.5),
-  ('save_keisuke_tonkotsu_list_my', 'list_my', 'keisuke-tonkotsu', 'user_you', 'tried', 4.3),
-  ('save_keisuke_tonkotsu_list_josh', 'list_josh', 'keisuke-tonkotsu', 'user_josh', 'tried', 4.3),
-  ('save_dumpling_darlings_list_ryan', 'list_ryan', 'dumpling-darlings', 'user_ryan', 'favourite', 4.4),
-  ('save_dumpling_darlings_list_my', 'list_my', 'dumpling-darlings', 'user_you', 'favourite', 4.4),
-  ('save_maxwell_tian_tian_list_josh', 'list_josh', 'maxwell-tian-tian', 'user_josh', 'tried', 4.1),
-  ('save_apiary_list_isabella', 'list_isabella', 'apiary', 'user_isabella', 'favourite', 4.7),
-  ('save_apiary_list_ryan', 'list_ryan', 'apiary', 'user_ryan', 'favourite', 4.7),
-  ('save_brotherbird_bugis_list_annj', 'list_annj', 'brotherbird-bugis', 'user_annj', 'favourite', 4.6),
-  ('save_brotherbird_bugis_list_isabella', 'list_isabella', 'brotherbird-bugis', 'user_isabella', 'favourite', 4.6),
-  ('save_zam_zam_list_josh', 'list_josh', 'zam-zam', 'user_josh', 'tried', 4.2),
-  ('save_zam_zam_list_my', 'list_my', 'zam-zam', 'user_you', 'tried', 4.2),
-  ('save_twenty_grammes_list_isabella', 'list_isabella', 'twenty-grammes', 'user_isabella', 'want_to_try', 4.0),
-  ('save_tongue_tip_list_josh', 'list_josh', 'tongue-tip', 'user_josh', 'tried', 4.0),
-  ('save_mei_heong_yuen_list_isabella', 'list_isabella', 'mei-heong-yuen', 'user_isabella', 'tried', 4.2),
-  ('save_mei_heong_yuen_list_my', 'list_my', 'mei-heong-yuen', 'user_you', 'tried', 4.2),
-  ('save_two_men_bagel_list_annj', 'list_annj', 'two-men-bagel', 'user_annj', 'favourite', 4.5),
-  ('save_two_men_bagel_list_josh', 'list_josh', 'two-men-bagel', 'user_josh', 'favourite', 4.5),
-  ('save_project_acai_hv_list_isabella', 'list_isabella', 'project-acai-hv', 'user_isabella', 'tried', 4.1),
-  ('save_keong_saik_bakery_list_annj', 'list_annj', 'keong-saik-bakery', 'user_annj', 'want_to_try', 4.0),
-  ('save_obba_bbq_serangoon_list_ryan', 'list_ryan', 'obba-bbq-serangoon', 'user_ryan', 'tried', 4.2),
-  ('save_nex_food_republic_list_josh', 'list_josh', 'nex-food-republic', 'user_josh', 'tried', 3.8),
-  ('save_nex_food_republic_list_my', 'list_my', 'nex-food-republic', 'user_you', 'tried', 3.8),
-  ('save_hatter_street_list_isabella', 'list_isabella', 'hatter-street', 'user_isabella', 'favourite', 4.3),
-  ('save_hatter_street_list_annj', 'list_annj', 'hatter-street', 'user_annj', 'favourite', 4.3),
-  ('save_tamjai_tampines_list_josh', 'list_josh', 'tamjai-tampines', 'user_josh', 'tried', 4.0),
-  ('save_fluff_stack_tampines_list_isabella', 'list_isabella', 'fluff-stack-tampines', 'user_isabella', 'want_to_try', 4.1),
-  ('save_fluff_stack_tampines_list_annj', 'list_annj', 'fluff-stack-tampines', 'user_annj', 'want_to_try', 4.1),
-  ('save_paris_baguette_tampines_list_annj', 'list_annj', 'paris-baguette-tampines', 'user_annj', 'tried', 3.7)
+  ('save_wild_honey_list_my', 'list_my', 'wild-honey', '11111111-1111-4111-8111-111111111111', 'tried', 4.2),
+  ('save_wild_honey_list_ryan', 'list_ryan', 'wild-honey', '33333333-3333-4333-8333-333333333333', 'tried', 4.2),
+  ('save_matchaya_takashimaya_list_isabella', 'list_isabella', 'matchaya-takashimaya', '44444444-4444-4444-8444-444444444444', 'favourite', 4.6),
+  ('save_matchaya_takashimaya_list_my', 'list_my', 'matchaya-takashimaya', '11111111-1111-4111-8111-111111111111', 'favourite', 4.6),
+  ('save_surrey_hills_313_list_annj', 'list_annj', 'surrey-hills-313', '22222222-2222-4222-8222-222222222222', 'want_to_try', 4.0),
+  ('save_five_guys_plaza_sing_list_josh', 'list_josh', 'five-guys-plaza-sing', '55555555-5555-4555-8555-555555555555', 'tried', 3.9),
+  ('save_bearded_bella_list_annj', 'list_annj', 'bearded-bella', '22222222-2222-4222-8222-222222222222', 'favourite', 4.5),
+  ('save_bearded_bella_list_ryan', 'list_ryan', 'bearded-bella', '33333333-3333-4333-8333-333333333333', 'favourite', 4.5),
+  ('save_keisuke_tonkotsu_list_my', 'list_my', 'keisuke-tonkotsu', '11111111-1111-4111-8111-111111111111', 'tried', 4.3),
+  ('save_keisuke_tonkotsu_list_josh', 'list_josh', 'keisuke-tonkotsu', '55555555-5555-4555-8555-555555555555', 'tried', 4.3),
+  ('save_dumpling_darlings_list_ryan', 'list_ryan', 'dumpling-darlings', '33333333-3333-4333-8333-333333333333', 'favourite', 4.4),
+  ('save_dumpling_darlings_list_my', 'list_my', 'dumpling-darlings', '11111111-1111-4111-8111-111111111111', 'favourite', 4.4),
+  ('save_maxwell_tian_tian_list_josh', 'list_josh', 'maxwell-tian-tian', '55555555-5555-4555-8555-555555555555', 'tried', 4.1),
+  ('save_apiary_list_isabella', 'list_isabella', 'apiary', '44444444-4444-4444-8444-444444444444', 'favourite', 4.7),
+  ('save_apiary_list_ryan', 'list_ryan', 'apiary', '33333333-3333-4333-8333-333333333333', 'favourite', 4.7),
+  ('save_brotherbird_bugis_list_annj', 'list_annj', 'brotherbird-bugis', '22222222-2222-4222-8222-222222222222', 'favourite', 4.6),
+  ('save_brotherbird_bugis_list_isabella', 'list_isabella', 'brotherbird-bugis', '44444444-4444-4444-8444-444444444444', 'favourite', 4.6),
+  ('save_zam_zam_list_josh', 'list_josh', 'zam-zam', '55555555-5555-4555-8555-555555555555', 'tried', 4.2),
+  ('save_zam_zam_list_my', 'list_my', 'zam-zam', '11111111-1111-4111-8111-111111111111', 'tried', 4.2),
+  ('save_twenty_grammes_list_isabella', 'list_isabella', 'twenty-grammes', '44444444-4444-4444-8444-444444444444', 'want_to_try', 4.0),
+  ('save_tongue_tip_list_josh', 'list_josh', 'tongue-tip', '55555555-5555-4555-8555-555555555555', 'tried', 4.0),
+  ('save_mei_heong_yuen_list_isabella', 'list_isabella', 'mei-heong-yuen', '44444444-4444-4444-8444-444444444444', 'tried', 4.2),
+  ('save_mei_heong_yuen_list_my', 'list_my', 'mei-heong-yuen', '11111111-1111-4111-8111-111111111111', 'tried', 4.2),
+  ('save_two_men_bagel_list_annj', 'list_annj', 'two-men-bagel', '22222222-2222-4222-8222-222222222222', 'favourite', 4.5),
+  ('save_two_men_bagel_list_josh', 'list_josh', 'two-men-bagel', '55555555-5555-4555-8555-555555555555', 'favourite', 4.5),
+  ('save_project_acai_hv_list_isabella', 'list_isabella', 'project-acai-hv', '44444444-4444-4444-8444-444444444444', 'tried', 4.1),
+  ('save_keong_saik_bakery_list_annj', 'list_annj', 'keong-saik-bakery', '22222222-2222-4222-8222-222222222222', 'want_to_try', 4.0),
+  ('save_obba_bbq_serangoon_list_ryan', 'list_ryan', 'obba-bbq-serangoon', '33333333-3333-4333-8333-333333333333', 'tried', 4.2),
+  ('save_nex_food_republic_list_josh', 'list_josh', 'nex-food-republic', '55555555-5555-4555-8555-555555555555', 'tried', 3.8),
+  ('save_nex_food_republic_list_my', 'list_my', 'nex-food-republic', '11111111-1111-4111-8111-111111111111', 'tried', 3.8),
+  ('save_hatter_street_list_isabella', 'list_isabella', 'hatter-street', '44444444-4444-4444-8444-444444444444', 'favourite', 4.3),
+  ('save_hatter_street_list_annj', 'list_annj', 'hatter-street', '22222222-2222-4222-8222-222222222222', 'favourite', 4.3),
+  ('save_tamjai_tampines_list_josh', 'list_josh', 'tamjai-tampines', '55555555-5555-4555-8555-555555555555', 'tried', 4.0),
+  ('save_fluff_stack_tampines_list_isabella', 'list_isabella', 'fluff-stack-tampines', '44444444-4444-4444-8444-444444444444', 'want_to_try', 4.1),
+  ('save_fluff_stack_tampines_list_annj', 'list_annj', 'fluff-stack-tampines', '22222222-2222-4222-8222-222222222222', 'want_to_try', 4.1),
+  ('save_paris_baguette_tampines_list_annj', 'list_annj', 'paris-baguette-tampines', '22222222-2222-4222-8222-222222222222', 'tried', 3.7)
 on conflict (list_id, place_id) do update set
   user_id = excluded.user_id,
   status = excluded.status,
@@ -200,29 +214,29 @@ on conflict (place_id, tag, tag_type) do update set tag = excluded.tag;
 
 insert into comments (id, place_id, user_id, comment)
 values
-  ('comment_wild_honey_ryan', 'wild-honey', 'user_ryan', 'Feels casual but still date-safe.'),
-  ('comment_matchaya_takashimaya_isabella', 'matchaya-takashimaya', 'user_isabella', 'Good Orchard dessert fallback.'),
-  ('comment_surrey_hills_313_annj', 'surrey-hills-313', 'user_annj', 'Good when everyone wants cafe food.'),
-  ('comment_five_guys_plaza_sing_josh', 'five-guys-plaza-sing', 'user_josh', 'Good when you need a zero-brain dinner.'),
-  ('comment_bearded_bella_annj', 'bearded-bella', 'user_annj', 'Coffee and brunch plates are consistent.'),
-  ('comment_keisuke_tonkotsu_you', 'keisuke-tonkotsu', 'user_you', 'Queue moves faster than expected.'),
-  ('comment_dumpling_darlings_ryan', 'dumpling-darlings', 'user_ryan', 'Better for a casual date than formal dinner.'),
-  ('comment_maxwell_tian_tian_josh', 'maxwell-tian-tian', 'user_josh', 'Go slightly off-peak.'),
-  ('comment_apiary_isabella', 'apiary', 'user_isabella', 'Blue milk and pistachio are dependable.'),
-  ('comment_brotherbird_bugis_annj', 'brotherbird-bugis', 'user_annj', 'Peak pastry list energy.'),
-  ('comment_zam_zam_josh', 'zam-zam', 'user_josh', 'Best when everyone is hungry.'),
-  ('comment_twenty_grammes_isabella', 'twenty-grammes', 'user_isabella', 'Good for late dessert cravings.'),
-  ('comment_tongue_tip_josh', 'tongue-tip', 'user_josh', 'Good solo dinner.'),
-  ('comment_mei_heong_yuen_isabella', 'mei-heong-yuen', 'user_isabella', 'Mango snow ice when the weather is rude.'),
-  ('comment_two_men_bagel_annj', 'two-men-bagel', 'user_annj', 'Messy in the correct way.'),
-  ('comment_project_acai_hv_isabella', 'project-acai-hv', 'user_isabella', 'Good when everyone wants something cold.'),
-  ('comment_keong_saik_bakery_annj', 'keong-saik-bakery', 'user_annj', 'Nice for a slow afternoon.'),
-  ('comment_obba_bbq_serangoon_ryan', 'obba-bbq-serangoon', 'user_ryan', 'Works when the date becomes a double date.'),
-  ('comment_nex_food_republic_josh', 'nex-food-republic', 'user_josh', 'The reliable budget option.'),
-  ('comment_hatter_street_isabella', 'hatter-street', 'user_isabella', 'Waffles are the reason to go.'),
-  ('comment_tamjai_tampines_josh', 'tamjai-tampines', 'user_josh', 'Good after class or work.'),
-  ('comment_fluff_stack_tampines_isabella', 'fluff-stack-tampines', 'user_isabella', 'Share pancakes unless everyone is committed.'),
-  ('comment_paris_baguette_tampines_annj', 'paris-baguette-tampines', 'user_annj', 'Not special, but useful.')
+  ('comment_wild_honey_ryan', 'wild-honey', '33333333-3333-4333-8333-333333333333', 'Feels casual but still date-safe.'),
+  ('comment_matchaya_takashimaya_isabella', 'matchaya-takashimaya', '44444444-4444-4444-8444-444444444444', 'Good Orchard dessert fallback.'),
+  ('comment_surrey_hills_313_annj', 'surrey-hills-313', '22222222-2222-4222-8222-222222222222', 'Good when everyone wants cafe food.'),
+  ('comment_five_guys_plaza_sing_josh', 'five-guys-plaza-sing', '55555555-5555-4555-8555-555555555555', 'Good when you need a zero-brain dinner.'),
+  ('comment_bearded_bella_annj', 'bearded-bella', '22222222-2222-4222-8222-222222222222', 'Coffee and brunch plates are consistent.'),
+  ('comment_keisuke_tonkotsu_you', 'keisuke-tonkotsu', '11111111-1111-4111-8111-111111111111', 'Queue moves faster than expected.'),
+  ('comment_dumpling_darlings_ryan', 'dumpling-darlings', '33333333-3333-4333-8333-333333333333', 'Better for a casual date than formal dinner.'),
+  ('comment_maxwell_tian_tian_josh', 'maxwell-tian-tian', '55555555-5555-4555-8555-555555555555', 'Go slightly off-peak.'),
+  ('comment_apiary_isabella', 'apiary', '44444444-4444-4444-8444-444444444444', 'Blue milk and pistachio are dependable.'),
+  ('comment_brotherbird_bugis_annj', 'brotherbird-bugis', '22222222-2222-4222-8222-222222222222', 'Peak pastry list energy.'),
+  ('comment_zam_zam_josh', 'zam-zam', '55555555-5555-4555-8555-555555555555', 'Best when everyone is hungry.'),
+  ('comment_twenty_grammes_isabella', 'twenty-grammes', '44444444-4444-4444-8444-444444444444', 'Good for late dessert cravings.'),
+  ('comment_tongue_tip_josh', 'tongue-tip', '55555555-5555-4555-8555-555555555555', 'Good solo dinner.'),
+  ('comment_mei_heong_yuen_isabella', 'mei-heong-yuen', '44444444-4444-4444-8444-444444444444', 'Mango snow ice when the weather is rude.'),
+  ('comment_two_men_bagel_annj', 'two-men-bagel', '22222222-2222-4222-8222-222222222222', 'Messy in the correct way.'),
+  ('comment_project_acai_hv_isabella', 'project-acai-hv', '44444444-4444-4444-8444-444444444444', 'Good when everyone wants something cold.'),
+  ('comment_keong_saik_bakery_annj', 'keong-saik-bakery', '22222222-2222-4222-8222-222222222222', 'Nice for a slow afternoon.'),
+  ('comment_obba_bbq_serangoon_ryan', 'obba-bbq-serangoon', '33333333-3333-4333-8333-333333333333', 'Works when the date becomes a double date.'),
+  ('comment_nex_food_republic_josh', 'nex-food-republic', '55555555-5555-4555-8555-555555555555', 'The reliable budget option.'),
+  ('comment_hatter_street_isabella', 'hatter-street', '44444444-4444-4444-8444-444444444444', 'Waffles are the reason to go.'),
+  ('comment_tamjai_tampines_josh', 'tamjai-tampines', '55555555-5555-4555-8555-555555555555', 'Good after class or work.'),
+  ('comment_fluff_stack_tampines_isabella', 'fluff-stack-tampines', '44444444-4444-4444-8444-444444444444', 'Share pancakes unless everyone is committed.'),
+  ('comment_paris_baguette_tampines_annj', 'paris-baguette-tampines', '22222222-2222-4222-8222-222222222222', 'Not special, but useful.')
 on conflict (id) do update set
   place_id = excluded.place_id,
   user_id = excluded.user_id,

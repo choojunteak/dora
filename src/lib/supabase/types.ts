@@ -14,7 +14,7 @@ export type Database = {
           created_at: string;
         };
         Insert: {
-          id?: string;
+          id: string;
           username: string;
           display_name: string;
           avatar_initials: string;
