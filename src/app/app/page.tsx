@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PlaceCard } from "@/components/PlaceCard";
+import { DEMO_USER_DISPLAY_NAME } from "@/lib/demoIdentity";
 import { getFoodLists } from "@/lib/data/lists";
 import { getFavouritePlaces } from "@/lib/data/places";
 
@@ -11,7 +12,7 @@ export default async function AppHomePage() {
   return (
     <main className="mx-auto max-w-5xl px-4 pb-24 pt-6">
       <section className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-stone-200">
-        <p className="text-sm font-semibold text-tomato">Mock signed in as You</p>
+        <p className="text-sm font-semibold text-tomato">Mock signed in as {DEMO_USER_DISPLAY_NAME}</p>
         <h1 className="mt-2 text-3xl font-black text-ink">Plan your next food stop</h1>
         <p className="mt-3 text-sm leading-6 text-stone-600">
           This MVP runs on local mock data today. Supabase auth and persistence are already planned

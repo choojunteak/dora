@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { DEMO_LIST_ID, DEMO_USER_DISPLAY_NAME } from "@/lib/demoIdentity";
 import type { FoodList, FoodPlace, MergedPlace, OneMapResult, RecommendationResult } from "@/types";
 import { distanceMeters } from "@/utils/distance";
 import { getVisiblePlaces } from "@/utils/places";
@@ -102,14 +103,14 @@ export function FoodMapApp({ foodLists, foodPlaces, initialSelectedListIds }: Pr
   }
 
   function handleSaveSelectedPlace() {
-    if (!selectedPlace || selectedPlace.listIds.includes("list_my")) return;
+    if (!selectedPlace || selectedPlace.listIds.includes(DEMO_LIST_ID)) return;
     setPlaces((current) =>
       current.map((place) =>
         place.id === selectedPlace.id
           ? {
               ...place,
-              listIds: [...place.listIds, "list_my"],
-              savedBy: [...place.savedBy, "You"]
+              listIds: [...place.listIds, DEMO_LIST_ID],
+              savedBy: [...place.savedBy, DEMO_USER_DISPLAY_NAME]
             }
           : place
       )
@@ -118,8 +119,8 @@ export function FoodMapApp({ foodLists, foodPlaces, initialSelectedListIds }: Pr
       current
         ? {
             ...current,
-            selectedListIds: [...current.selectedListIds, "list_my"],
-            savedBySelected: [...current.savedBySelected, "You"]
+            selectedListIds: [...current.selectedListIds, DEMO_LIST_ID],
+            savedBySelected: [...current.savedBySelected, DEMO_USER_DISPLAY_NAME]
           }
         : current
     );

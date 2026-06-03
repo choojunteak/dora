@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { DEMO_LIST_ID, DEMO_USER_DISPLAY_NAME } from "@/lib/demoIdentity";
 import type { FoodList, FoodPlace, PlaceStatus } from "@/types";
 
 type Props = {
@@ -21,7 +22,7 @@ export function AddPlaceModal({ lists, isOpen, onClose, onAddPlace }: Props) {
   const [priceRange, setPriceRange] = useState<FoodPlace["priceRange"]>("$$");
   const [notes, setNotes] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
-  const [listId, setListId] = useState(lists[0]?.id ?? "list_my");
+  const [listId, setListId] = useState(lists[0]?.id ?? DEMO_LIST_ID);
   const [status, setStatus] = useState<PlaceStatus>("want_to_try");
 
   if (!isOpen) return null;
@@ -42,7 +43,7 @@ export function AddPlaceModal({ lists, isOpen, onClose, onAddPlace }: Props) {
       notes,
       sources: sourceUrl ? [{ type: sourceUrl.includes("instagram") ? "instagram" : "tiktok", url: sourceUrl }] : [],
       comments: [],
-      savedBy: [list?.ownerName ?? "You"],
+      savedBy: [list?.ownerName ?? DEMO_USER_DISPLAY_NAME],
       listIds: [listId],
       status
     };

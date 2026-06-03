@@ -8,6 +8,7 @@ import type {
   PlaceSource,
   PlaceStatus
 } from "@/types";
+import { DEMO_USER_ID } from "@/lib/demoIdentity";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
@@ -142,7 +143,7 @@ function mapSupabaseRows(data: {
       avatar: profile?.avatar_initials ?? list.name.slice(0, 2).toUpperCase(),
       description: list.description,
       color: list.color,
-      isMine: list.owner_id === "user_you"
+      isMine: list.owner_id === DEMO_USER_ID
     };
   });
 
