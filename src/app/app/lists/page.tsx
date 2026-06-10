@@ -196,7 +196,7 @@ export default async function ListsPage() {
                         className="mb-3 text-xs font-black uppercase tracking-[0.24em]"
                         style={{ color: mutedTextColor }}
                       >
-                        {list.ownerName}'s list
+                        {list.ownerName}&apos;s list
                       </p>
 
                       <h2

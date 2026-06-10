@@ -50,7 +50,7 @@ export default async function ListDetailPage({
               className="text-xs font-black uppercase tracking-[0.2em]"
               style={{ color: palette.blossom }}
             >
-              {list.ownerName}'s list
+              {list.ownerName}&apos;s list
             </p>
 
             <h1
